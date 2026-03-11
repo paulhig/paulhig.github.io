@@ -1,0 +1,519 @@
+---
+layout: default
+title: Movie Watchlist
+---
+
+<style>
+  .watchlist-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .loading {
+    text-align: center;
+    padding: 40px;
+    font-size: 1.2em;
+    color: #666;
+  }
+  .movie-card {
+    padding: 20px;
+    margin: 15px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+  .movie-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  .movie-card.watched {
+    opacity: 0.85;
+    border-left: 5px solid #4CAF50;
+  }
+  .movie-card h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+  .movie-meta {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+  }
+  .movie-rating {
+    color: #FFD700;
+    font-size: 1.3em;
+    margin: 10px 0;
+  }
+  .movie-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .add-form {
+    margin: 30px 0;
+    padding: 25px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+  }
+  .add-form h3 {
+    margin-top: 0;
+  }
+  .form-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+  .add-form input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    flex: 1;
+    min-width: 200px;
+  }
+  .btn {
+    padding: 10px 20px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.2s;
+  }
+  .btn:hover {
+    background: #1976D2;
+  }
+  .btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  .btn-success {
+    background: #4CAF50;
+  }
+  .btn-success:hover {
+    background: #45a049;
+  }
+  .btn-danger {
+    background: #f44336;
+  }
+  .btn-danger:hover {
+    background: #d32f2f;
+  }
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+  .filters {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover {
+    border-color: #4CAF50;
+  }
+  .filter-btn.active {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+  }
+  .message {
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    animation: slideIn 0.3s;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .message.error {
+    background: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #c62828;
+  }
+  .message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-left: 4px solid #2e7d32;
+  }
+  .stats {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    padding: 15px 25px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2196F3;
+  }
+  .stat-label {
+    color: #666;
+    font-size: 0.9em;
+  }
+</style>
+
+<div class="watchlist-container">
+  <div class="header">
+    <h1>🎬 My Movie Watchlist</h1>
+    <p>Track the movies you want to watch and rate the ones you've seen!</p>
+  </div>
+  
+  <div id="message"></div>
+  
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-number" id="totalCount">0</div>
+      <div class="stat-label">Total Movies</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="watchedCount">0</div>
+      <div class="stat-label">Watched</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="toWatchCount">0</div>
+      <div class="stat-label">To Watch</div>
+    </div>
+  </div>
+  
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterMovies('all')">
+      📋 All Movies
+    </button>
+    <button class="filter-btn" onclick="filterMovies('to-watch')">
+      ⏳ To Watch
+    </button>
+    <button class="filter-btn" onclick="filterMovies('watched')">
+      ✅ Watched
+    </button>
+  </div>
+  
+  <div class="add-form">
+    <h3>➕ Add New Movie</h3>
+    <div class="form-row">
+      <input type="text" id="movieTitle" placeholder="Movie title *" />
+      <input type="number" id="movieYear" placeholder="Year *" min="1900" max="2030" />
+      <input type="text" id="movieGenre" placeholder="Genre (e.g., Drama, Comedy)" />
+    </div>
+    <button class="btn btn-success" onclick="addMovie()">
+      Add to Watchlist
+    </button>
+  </div>
+  
+  <div id="movieGrid">
+    <div class="loading">📽️ Loading movies...</div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION - REPLACE THESE VALUES!
+// ============================================
+const AIRTABLE_TOKEN = 'YOUR_AIRTABLE_TOKEN_HERE';
+const BASE_ID = 'YOUR_BASE_ID_HERE';
+const TABLE_NAME = 'Movies';
+
+let movies = [];
+let currentFilter = 'all';
+
+// ============================================
+// AIRTABLE API FUNCTIONS
+// ============================================
+
+async function loadMovies() {
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?sort%5B0%5D%5Bfield%5D=Date%20Added&sort%5B0%5D%5Bdirection%5D=desc`,
+      {
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_TOKEN}`
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Failed to load movies');
+    }
+    
+    const data = await response.json();
+    
+    movies = data.records.map(record => ({
+      id: record.id,
+      title: record.fields.Title || 'Untitled',
+      year: record.fields.Year || 0,
+      genre: record.fields.Genre || 'Unknown',
+      watched: record.fields.Watched || false,
+      rating: record.fields.Rating || 0,
+      dateAdded: record.fields['Date Added'] || ''
+    }));
+    
+    updateStats();
+    renderMovies();
+    showMessage('Movies loaded successfully! ✅', 'success');
+    
+  } catch (error) {
+    console.error('Error loading movies:', error);
+    document.getElementById('movieGrid').innerHTML = 
+      `<div class="message error">
+        <strong>Error loading movies:</strong> ${error.message}<br>
+        <small>Check your Airtable token and base ID in the code.</small>
+      </div>`;
+  }
+}
+
+async function addMovie() {
+  const title = document.getElementById('movieTitle').value.trim();
+  const year = parseInt(document.getElementById('movieYear').value);
+  const genre = document.getElementById('movieGenre').value.trim() || 'Unknown';
+  
+  if (!title) {
+    showMessage('Please enter a movie title!', 'error');
+    return;
+  }
+  
+  if (!year || year < 1900 || year > 2030) {
+    showMessage('Please enter a valid year (1900-2030)!', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fields: {
+            Title: title,
+            Year: year,
+            Genre: genre,
+            Watched: false,
+            Rating: 0,
+            'Date Added': new Date().toISOString().split('T')[0]
+          }
+        })
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Failed to add movie');
+    }
+    
+    // Clear form
+    document.getElementById('movieTitle').value = '';
+    document.getElementById('movieYear').value = '';
+    document.getElementById('movieGenre').value = '';
+    
+    showMessage(`"${title}" added to your watchlist! 🎉`, 'success');
+    await loadMovies();
+    
+  } catch (error) {
+    console.error('Error adding movie:', error);
+    showMessage('Error adding movie: ' + error.message, 'error');
+  }
+}
+
+async function updateMovie(id, fields) {
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ fields })
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Failed to update movie');
+    }
+    
+    showMessage('Updated! ✅', 'success');
+    await loadMovies();
+    
+  } catch (error) {
+    console.error('Error updating movie:', error);
+    showMessage('Error updating: ' + error.message, 'error');
+  }
+}
+
+async function deleteMovie(id, title) {
+  if (!confirm(`Delete "${title}"? This cannot be undone!`)) return;
+  
+  try {
+    const response = await fetch(
+      `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${AIRTABLE_TOKEN}`
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error?.message || 'Failed to delete movie');
+    }
+    
+    showMessage(`"${title}" deleted! 🗑️`, 'success');
+    await loadMovies();
+    
+  } catch (error) {
+    console.error('Error deleting movie:', error);
+    showMessage('Error deleting: ' + error.message, 'error');
+  }
+}
+
+// ============================================
+// UI FUNCTIONS
+// ============================================
+
+function updateStats() {
+  const total = movies.length;
+  const watched = movies.filter(m => m.watched).length;
+  const toWatch = total - watched;
+  
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('watchedCount').textContent = watched;
+  document.getElementById('toWatchCount').textContent = toWatch;
+}
+
+function renderMovies() {
+  const grid = document.getElementById('movieGrid');
+  
+  const filtered = movies.filter(m => {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'watched') return m.watched;
+    if (currentFilter === 'to-watch') return !m.watched;
+  });
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="loading">No movies found. Add one above! 🎬</div>';
+    return;
+  }
+  
+  grid.innerHTML = filtered.map(movie => {
+    const stars = '⭐'.repeat(movie.rating);
+    
+    return `
+      <div class="movie-card ${movie.watched ? 'watched' : ''}">
+        <h3>${movie.title}</h3>
+        <p class="movie-meta">
+          📅 ${movie.year} | 🎭 ${movie.genre}
+        </p>
+        ${movie.watched && movie.rating > 0 ? 
+          `<div class="movie-rating">${stars}</div>` : ''}
+        
+        <div class="movie-actions">
+          <button class="btn btn-small ${movie.watched ? '' : 'btn-success'}" 
+                  onclick="toggleWatched('${movie.id}', ${!movie.watched})">
+            ${movie.watched ? '↩️ Mark Unwatched' : '✅ Mark Watched'}
+          </button>
+          
+          ${movie.watched ? `
+            <select onchange="setRating('${movie.id}', this.value)" 
+                    style="padding:8px; border-radius:4px; border:1px solid #ddd;">
+              <option value="0" ${movie.rating===0?'selected':''}>⭐ Rate movie</option>
+              <option value="1" ${movie.rating===1?'selected':''}>⭐</option>
+              <option value="2" ${movie.rating===2?'selected':''}>⭐⭐</option>
+              <option value="3" ${movie.rating===3?'selected':''}>⭐⭐⭐</option>
+              <option value="4" ${movie.rating===4?'selected':''}>⭐⭐⭐⭐</option>
+              <option value="5" ${movie.rating===5?'selected':''}>⭐⭐⭐⭐⭐</option>
+            </select>
+          ` : ''}
+          
+          <button class="btn btn-danger btn-small" 
+                  onclick="deleteMovie('${movie.id}', '${movie.title.replace(/'/g, "\\'")}')"
+                  style="margin-left:auto;">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function toggleWatched(id, watched) {
+  const fields = { Watched: watched };
+  if (!watched) {
+    fields.Rating = 0; // Reset rating when marking as unwatched
+  }
+  await updateMovie(id, fields);
+}
+
+async function setRating(id, rating) {
+  await updateMovie(id, { Rating: parseInt(rating) });
+}
+
+function filterMovies(filter) {
+  currentFilter = filter;
+  
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  renderMovies();
+}
+
+function showMessage(text, type) {
+  const msgDiv = document.getElementById('message');
+  msgDiv.className = `message ${type}`;
+  msgDiv.textContent = text;
+  
+  setTimeout(() => {
+    msgDiv.className = '';
+    msgDiv.textContent = '';
+  }, 4000);
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+// Initial load
+loadMovies();
+
+// Auto-refresh every 30 seconds to catch changes from Airtable
+setInterval(loadMovies, 30000);
+</script>
