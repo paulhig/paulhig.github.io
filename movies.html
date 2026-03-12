@@ -62,6 +62,15 @@ favicon: 🎬
     font-size: 0.9em;
     margin: 5px 0;
   }
+  .movie-details {
+    color: #555;
+    font-size: 0.85em;
+    margin: 8px 0;
+    line-height: 1.4;
+  }
+  .movie-details strong {
+    color: #333;
+  }
   .movie-rating {
     color: #FFD700;
     font-size: 1.3em;
@@ -90,13 +99,19 @@ favicon: 🎬
     flex-wrap: wrap;
     margin-bottom: 15px;
   }
-  .add-form input {
+  .add-form input,
+  .add-form textarea {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1em;
     flex: 1;
     min-width: 200px;
+    font-family: inherit;
+  }
+  .add-form textarea {
+    min-height: 60px;
+    resize: vertical;
   }
   .btn {
     padding: 10px 20px;
@@ -247,6 +262,10 @@ favicon: 🎬
       <input type="number" id="movieYear" placeholder="Year *" min="1900" max="2030" />
       <input type="text" id="movieGenre" placeholder="Genre (e.g., Drama, Comedy)" />
     </div>
+    <div class="form-row">
+      <input type="text" id="movieDirector" placeholder="Director (optional)" />
+      <input type="text" id="movieActors" placeholder="Actors (optional)" />
+    </div>
     <button class="btn btn-success" onclick="addMovie()">
       Add to Watchlist
     </button>
@@ -295,6 +314,8 @@ async function loadMovies() {
       title: record.fields.Title || 'Untitled',
       year: record.fields.Year || 0,
       genre: record.fields.Genre || 'Unknown',
+      director: record.fields.Director || '',
+      actors: record.fields.Actors || '',
       watched: record.fields.Watched || false,
       rating: record.fields.Rating || 0,
       dateAdded: record.fields['Date Added'] || '',
@@ -318,6 +339,8 @@ async function addMovie() {
   const title = document.getElementById('movieTitle').value.trim();
   const year = parseInt(document.getElementById('movieYear').value);
   const genre = document.getElementById('movieGenre').value.trim() || 'Unknown';
+  const director = document.getElementById('movieDirector').value.trim();
+  const actors = document.getElementById('movieActors').value.trim();
   
   if (!title) {
     showMessage('Please enter a movie title!', 'error');
@@ -343,6 +366,8 @@ async function addMovie() {
             Title: title,
             Year: year,
             Genre: genre,
+            Director: director,
+            Actors: actors,
             Watched: false,
             Rating: 0,
             'Date Added': new Date().toISOString().split('T')[0],
@@ -361,6 +386,8 @@ async function addMovie() {
     document.getElementById('movieTitle').value = '';
     document.getElementById('movieYear').value = '';
     document.getElementById('movieGenre').value = '';
+    document.getElementById('movieDirector').value = '';
+    document.getElementById('movieActors').value = '';
     
     showMessage(`"${title}" added to your watchlist! 🎉`, 'success');
     await loadMovies();
@@ -494,6 +521,8 @@ function renderMovies() {
         <p class="movie-meta">
           📅 ${movie.year} | 🎭 ${movie.genre}
         </p>
+        ${movie.director ? `<p class="movie-details"><strong>Director:</strong> ${movie.director}</p>` : ''}
+        ${movie.actors ? `<p class="movie-details"><strong>Cast:</strong> ${movie.actors}</p>` : ''}
         ${movie.watched && movie.rating > 0 ? 
           `<div class="movie-rating">${stars}</div>` : ''}
         
@@ -501,7 +530,7 @@ function renderMovies() {
           ${!movie.watched ? `
             <button class="btn btn-small btn-watch-next" 
                     onclick="toggleWatchNext('${movie.id}', ${!movie.watchNext})">
-              ${movie.watchNext ? '❌ Remove Watch Next' : '🔥 Mark Watch Next'}
+              ${movie.watchNext ? '❌ Remove' : '🔥 Watch Next'}
             </button>
           ` : ''}
           
