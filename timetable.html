@@ -99,6 +99,15 @@
     .modal-overlay { align-items: center; }
   }
 
+  .drag-handle {
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 10px 0 12px; color: var(--text3); cursor: grab; flex-shrink: 0;
+    touch-action: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .event-card.drag-over { border-color: var(--text2); background: var(--surface2); }
+  .event-card.drag-over .event-stripe { opacity: 0.5; }
+
   @media (prefers-color-scheme: light) {
     :root { --bg: #f5f3ef; --surface: #ffffff; --surface2: #f0ede8; --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.15); --text: #1a1816; --text2: #706c66; --text3: #aaa89f; }
     select.field-input option { background: #fff; }
@@ -331,17 +340,44 @@
     return `${h % 12 || 12}:${String(m).padStart(2,'0')}${h >= 12 ? 'pm' : 'am'}`;
   }
 
+  // ── Sort order (stored locally per day) ─────────────────
+  function getSortOrder(day) {
+    try { return JSON.parse(localStorage.getItem('sort_' + day) || '[]'); } catch(e) { return []; }
+  }
+  function saveSortOrder(day, ids) {
+    localStorage.setItem('sort_' + day, JSON.stringify(ids));
+  }
+  function sortedEvents(day) {
+    const evs = records.filter(r => r.day === day);
+    const order = getSortOrder(day);
+    if (!order.length) return evs.sort((a,b) => a.start.localeCompare(b.start));
+    // Place ordered IDs first, then any new unordered ones at end
+    const ordered = order.map(id => evs.find(e => e.id === id)).filter(Boolean);
+    const unordered = evs.filter(e => !order.includes(e.id)).sort((a,b) => a.start.localeCompare(b.start));
+    return [...ordered, ...unordered];
+  }
+
   function renderEvents() {
     const el = document.getElementById('events-list');
-    const evs = records.filter(r => r.day === activeDay).sort((a,b) => a.start.localeCompare(b.start));
+    const evs = sortedEvents(activeDay);
     if (!evs.length) {
       el.innerHTML = `<div class="empty-state"><div class="empty-icon">◯</div>No events on ${activeDay}<br><span style="font-size:12px;display:block;margin-top:4px">Tap + to add one</span></div>`;
       return;
     }
     el.innerHTML = evs.map(ev => {
-      const hex = COLORS[ev.color.toLowerCase()] || '#555250';
+      const hex = COLORS[(ev.color || '').toLowerCase()] || '#555250';
       const locHtml = ev.loc ? `<div class="event-loc"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="flex-shrink:0;opacity:.5"><path d="M5 0C2.79 0 1 1.79 1 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5C4.17 5.5 3.5 4.83 3.5 4S4.17 2.5 5 2.5 6.5 3.17 6.5 4 5.83 5.5 5 5.5z" fill="currentColor"/></svg>${ev.loc}</div>` : '';
-      return `<div class="event-card">
+      return `<div class="event-card" draggable="true" data-id="${ev.id}"
+        ondragstart="dragStart(event)"
+        ondragover="dragOver(event)"
+        ondragend="dragEnd(event)"
+        ondrop="dragDrop(event)"
+        ontouchstart="touchStart(event)"
+        ontouchmove="touchMove(event)"
+        ontouchend="touchEnd(event)">
+        <div class="drag-handle" aria-label="Drag to reorder">
+          <svg width="12" height="16" viewBox="0 0 12 16" fill="none"><circle cx="4" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="12" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="12" r="1.5" fill="currentColor" opacity=".4"/></svg>
+        </div>
         <div class="event-stripe" style="background:${hex}"></div>
         <div class="event-main">
           <div class="event-name">${ev.name || 'Untitled'}</div>
@@ -351,6 +387,83 @@
         <button class="event-del" onclick="deleteEvent('${ev.id}',event)" aria-label="Delete">×</button>
       </div>`;
     }).join('');
+  }
+
+  // ── Drag and drop (desktop) ───────────────────────────────
+  let dragSrcId = null;
+
+  function dragStart(e) {
+    dragSrcId = e.currentTarget.dataset.id;
+    e.currentTarget.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function dragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const card = e.currentTarget;
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
+    if (card.dataset.id !== dragSrcId) card.classList.add('drag-over');
+  }
+  function dragDrop(e) {
+    e.preventDefault();
+    const targetId = e.currentTarget.dataset.id;
+    if (dragSrcId && targetId && dragSrcId !== targetId) reorder(dragSrcId, targetId);
+  }
+  function dragEnd(e) {
+    e.currentTarget.style.opacity = '';
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
+    dragSrcId = null;
+  }
+
+  // ── Touch drag (mobile) ───────────────────────────────────
+  let touchDragId = null, touchClone = null, touchOffsetY = 0;
+
+  function touchStart(e) {
+    const card = e.currentTarget;
+    // Only start drag from the handle
+    if (!e.target.closest('.drag-handle')) return;
+    e.preventDefault();
+    touchDragId = card.dataset.id;
+    const rect = card.getBoundingClientRect();
+    touchOffsetY = e.touches[0].clientY - rect.top;
+    touchClone = card.cloneNode(true);
+    touchClone.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;opacity:0.85;z-index:999;pointer-events:none;transition:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);`;
+    document.body.appendChild(touchClone);
+    card.style.opacity = '0.3';
+  }
+  function touchMove(e) {
+    if (!touchDragId || !touchClone) return;
+    e.preventDefault();
+    const y = e.touches[0].clientY;
+    const rect = touchClone.getBoundingClientRect();
+    touchClone.style.top = (y - touchOffsetY) + 'px';
+    // Highlight card under finger
+    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
+    const els = document.elementsFromPoint(e.touches[0].clientX, y);
+    const target = els.find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
+    if (target) target.classList.add('drag-over');
+  }
+  function touchEnd(e) {
+    if (!touchDragId) return;
+    const y = e.changedTouches[0].clientY;
+    const els = document.elementsFromPoint(e.changedTouches[0].clientX, y);
+    const target = els.find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
+    if (target) reorder(touchDragId, target.dataset.id);
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    document.querySelectorAll('.event-card').forEach(c => { c.style.opacity = ''; c.classList.remove('drag-over'); });
+    touchDragId = null;
+  }
+
+  function reorder(srcId, targetId) {
+    const evs = sortedEvents(activeDay);
+    const ids = evs.map(e => e.id);
+    const from = ids.indexOf(srcId);
+    const to   = ids.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, srcId);
+    saveSortOrder(activeDay, ids);
+    renderEvents();
   }
 
   function openAdd() {
