@@ -386,7 +386,7 @@
     if (loc)           fields[FIELDS.loc]   = loc;
     if (selectedColor) fields[FIELDS.color] = selectedColor;
     try {
-      await atFetch('POST', '', { records: [{ fields }] });
+      await atFetch('POST', '', { records: [{ fields }], typecast: true });
       closeModal();
       await loadEvents();
     } catch(e) {
