@@ -274,14 +274,15 @@
 
   function parseRecord(r) {
     const f = r.fields;
+    const sel = v => (v && typeof v === 'object') ? v.name : (v || '');
     return {
       id:    r.id,
       name:  f[FIELDS.name]  || '',
-      day:   (f[FIELDS.day]  || ''),
+      day:   sel(f[FIELDS.day]),
       start: f[FIELDS.start] || '',
       end:   f[FIELDS.end]   || '',
       loc:   f[FIELDS.loc]   || '',
-      color: (f[FIELDS.color] || '')
+      color: sel(f[FIELDS.color])
     };
   }
   // ────────────────────────────────────────────────────────
@@ -377,13 +378,13 @@
     document.getElementById('save-btn').disabled = true;
     setStatus('Saving…');
     const fields = {
-      'Event Name': name,
-      'Day':        day,
-      'Start Time': start,
-      'End Time':   end
+      [FIELDS.name]:  name,
+      [FIELDS.day]:   day,
+      [FIELDS.start]: start,
+      [FIELDS.end]:   end
     };
-    if (loc)           fields['Location'] = loc;
-    if (selectedColor) fields['Color']    = selectedColor;
+    if (loc)           fields[FIELDS.loc]   = loc;
+    if (selectedColor) fields[FIELDS.color] = selectedColor;
     try {
       await atFetch('POST', '', { records: [{ fields }] });
       closeModal();
