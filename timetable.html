@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Timetable">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f0f">
+<title>Timetable</title>
+<link rel="manifest" id="manifest-link">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --text2: #888580;
+    --text3: #555250;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif; overscroll-behavior: none; }
+  .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
+
+  .header { padding: calc(var(--safe-top) + 16px) 20px 0; flex-shrink: 0; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .header-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-date { font-size: 13px; color: var(--text2); margin-top: 1px; }
+  .add-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: 22px; font-weight: 300; line-height: 1; transition: transform .15s, opacity .15s; flex-shrink: 0; }
+  .add-btn:active { transform: scale(0.92); opacity: 0.8; }
+
+  .day-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .day-scroll::-webkit-scrollbar { display: none; }
+  .day-pill { flex-shrink: 0; padding: 7px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; background: var(--surface); color: var(--text2); border: 0.5px solid var(--border); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; white-space: nowrap; -webkit-user-select: none; user-select: none; }
+  .day-pill.active { background: var(--text); color: var(--bg); border-color: transparent; font-weight: 600; }
+  .day-pill .cnt { font-size: 10px; font-weight: 600; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.15); }
+
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px calc(var(--safe-bottom) + 24px); scrollbar-width: none; }
+  .content::-webkit-scrollbar { display: none; }
+  .events-list { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+
+  .event-card { display: flex; align-items: stretch; background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; transition: transform .12s; }
+  .event-card:active { transform: scale(0.98); }
+  .event-stripe { width: 4px; flex-shrink: 0; }
+  .event-main { flex: 1; padding: 12px 14px; min-width: 0; }
+  .event-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-time { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
+  .event-loc { font-size: 11px; color: var(--text3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+  .event-del { padding: 0 16px; background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; display: flex; align-items: center; transition: color .15s; flex-shrink: 0; }
+  .event-del:active { color: #e05555; }
+
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--text3); font-size: 14px; line-height: 1.6; }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.2; }
+
+  .status-bar { text-align: center; font-size: 11px; color: var(--text3); padding: 6px 16px 0; flex-shrink: 0; min-height: 22px; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 480px; padding: 0 20px calc(var(--safe-bottom) + 28px); border-top: 0.5px solid var(--border2); animation: slideUp .28s cubic-bezier(0.32,0.72,0,1); }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 20px; }
+  .sheet-title { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+
+  .field-group { margin-bottom: 14px; }
+  .field-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: block; }
+  .field-input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; padding: 11px 13px; font-family: inherit; outline: none; -webkit-appearance: none; appearance: none; transition: border-color .15s; }
+  .field-input:focus { border-color: var(--border2); }
+  .field-input::placeholder { color: var(--text3); }
+  select.field-input { cursor: pointer; }
+  option { background: #1a1a1a; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .12s, border-color .12s; }
+  .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+
+  .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-cancel { flex: 1; padding: 14px; border-radius: var(--radius-sm); background: var(--surface2); border: 0.5px solid var(--border); color: var(--text2); font-size: 15px; font-family: inherit; cursor: pointer; }
+  .btn-save { flex: 2; padding: 14px; border-radius: var(--radius-sm); background: var(--text); border: none; color: var(--bg); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity .15s; }
+  .btn-save:disabled { opacity: 0.4; }
+
+  .install-banner { margin: 0 16px 10px; padding: 12px 14px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .install-banner p { font-size: 12px; color: var(--text2); flex: 1; line-height: 1.4; }
+  .install-banner p strong { color: var(--text); font-weight: 600; }
+  .install-btn { padding: 7px 12px; background: var(--text); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .install-close { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 0 0 0 4px; line-height: 1; }
+
+  @media (min-width: 481px) {
+    .app { border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
+    .modal-sheet { border-radius: 24px; margin-bottom: 40px; }
+    .modal-overlay { align-items: center; }
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f5f3ef; --surface: #ffffff; --surface2: #f0ede8; --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.15); --text: #1a1816; --text2: #706c66; --text3: #aaa89f; }
+    select.field-input option { background: #fff; }
+    .add-btn { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-title">Timetable</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+      <button class="add-btn" onclick="openAdd()" aria-label="Add event">+</button>
+    </div>
+    <div class="day-scroll" id="day-tabs"></div>
+  </div>
+
+  <div id="install-area"></div>
+  <div class="status-bar" id="status"></div>
+
+  <div class="content">
+    <div class="events-list" id="events-list"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">New event</div>
+    <div class="field-group">
+      <label class="field-label">Event name</label>
+      <input class="field-input" id="f-name" type="text" placeholder="e.g. Team standup" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Day</label>
+      <select class="field-input" id="f-day"></select>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Start</label>
+        <input class="field-input" id="f-start" type="time">
+      </div>
+      <div class="field-group">
+        <label class="field-label">End</label>
+        <input class="field-input" id="f-end" type="time">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Location (optional)</label>
+      <input class="field-input" id="f-loc" type="text" placeholder="e.g. Room 3B" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Color</label>
+      <div class="color-picker" id="color-picker"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="saveEvent()">Save event</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ───────────────────────────────────────────────
+  const AIRTABLE_API_KEY = 'patY6NBplXoNFImHj.38510f58830f683b85ece47317e1c9c4c3e7db0e487a6ff356e761641881540f';
+  const BASE_ID  = 'app87ZRy0mgBmMAUS';
+  const TABLE_ID = 'tblOtdB1fkU6s0eNc';
+  const FIELDS = {
+    name:  'fldHHfDnx5BuJ7hop',
+    day:   'fld1y2dyeqJfWJ7ON',
+    start: 'fldgDPAViGE2l5hc3',
+    end:   'fldyaaYHuT7LqQOLz',
+    loc:   'fld3VGK2vPLA3g1kl',
+    color: 'fldwnsBwBNgPhabsb'
+  };
+  // ────────────────────────────────────────────────────────
+
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const COLORS = {
+    purple: '#7F77DD', teal: '#1D9E75', amber: '#EF9F27',
+    coral:  '#D85A30', pink: '#D4537E', blue:  '#378ADD', green: '#639922'
+  };
+
+  let records = [];
+  let activeDay = DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+  let selectedColor = '';
+  let deferredPrompt = null;
+
+  // PWA manifest
+  const manifest = {
+    name: 'Weekly Timetable', short_name: 'Timetable',
+    start_url: './', display: 'standalone',
+    background_color: '#0f0f0f', theme_color: '#0f0f0f',
+    orientation: 'portrait',
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230f0f0f'/%3E%3Crect x='44' y='56' width='104' height='80' rx='10' fill='none' stroke='%23f0ede8' stroke-width='8'/%3E%3Crect x='44' y='56' width='104' height='26' rx='10' fill='%23f0ede8'/%3E%3Crect x='60' y='102' width='28' height='6' rx='3' fill='%23f0ede8'/%3E%3Crect x='60' y='116' width='48' height='6' rx='3' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230f0f0f'/%3E%3Crect x='116' y='148' width='280' height='216' rx='24' fill='none' stroke='%23f0ede8' stroke-width='20'/%3E%3Crect x='116' y='148' width='280' height='70' rx='24' fill='%23f0ede8'/%3E%3Crect x='156' y='272' width='76' height='16' rx='8' fill='%23f0ede8'/%3E%3Crect x='156' y='308' width='128' height='16' rx='8' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+
+  // Date header
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  // Day select options
+  const daySelect = document.getElementById('f-day');
+  DAYS.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    if (d === activeDay) o.selected = true;
+    daySelect.appendChild(o);
+  });
+
+  // Color swatches
+  const cp = document.getElementById('color-picker');
+  Object.entries(COLORS).forEach(([name, hex]) => {
+    const sw = document.createElement('button');
+    sw.className = 'color-swatch';
+    sw.style.background = hex;
+    sw.title = name;
+    sw.onclick = () => {
+      selectedColor = name;
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+    };
+    cp.appendChild(sw);
+  });
+
+  // PWA install
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e; showInstallBanner('pwa');
+  });
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (isIos && !isStandalone) setTimeout(() => showInstallBanner('ios'), 2000);
+
+  function showInstallBanner(type) {
+    const area = document.getElementById('install-area');
+    if (type === 'pwa') {
+      area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong><br>Install for quick access</p><button class="install-btn" onclick="triggerInstall()">Install</button><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
+    } else {
+      area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong><br>Tap the share icon then "Add to Home Screen"</p><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
+    }
+  }
+  async function triggerInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    document.getElementById('install-area').innerHTML = '';
+  }
+
+  // ── Airtable helpers ─────────────────────────────────────
+  const AT_BASE = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
+  const AT_HEADERS = { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' };
+
+  async function atFetch(method, path = '', body = null) {
+    const res = await fetch(AT_BASE + path, {
+      method,
+      headers: AT_HEADERS,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) throw new Error(`Airtable ${res.status}`);
+    return res.json();
+  }
+
+  function parseRecord(r) {
+    const f = r.fields;
+    return {
+      id:    r.id,
+      name:  f[FIELDS.name]  || '',
+      day:   (f[FIELDS.day]  || ''),
+      start: f[FIELDS.start] || '',
+      end:   f[FIELDS.end]   || '',
+      loc:   f[FIELDS.loc]   || '',
+      color: (f[FIELDS.color] || '')
+    };
+  }
+  // ────────────────────────────────────────────────────────
+
+  function setStatus(msg) { document.getElementById('status').textContent = msg; }
+
+  async function loadEvents() {
+    setStatus('Loading…');
+    try {
+      let all = [], offset = null;
+      do {
+        const url = offset ? `?offset=${offset}` : '';
+        const data = await atFetch('GET', url);
+        all = all.concat(data.records.map(parseRecord));
+        offset = data.offset || null;
+      } while (offset);
+      records = all;
+      setStatus(records.length ? `${records.length} event${records.length !== 1 ? 's' : ''}` : '');
+    } catch (e) {
+      setStatus('Could not load — check API key');
+      records = [];
+    }
+    renderTabs();
+    renderEvents();
+  }
+
+  function renderTabs() {
+    document.getElementById('day-tabs').innerHTML = DAYS.map(d => {
+      const n = records.filter(r => r.day === d).length;
+      return `<button class="day-pill${d === activeDay ? ' active' : ''}" onclick="setDay('${d}')">${d.slice(0,3)}${n ? `<span class="cnt">${n}</span>` : ''}</button>`;
+    }).join('');
+  }
+
+  function setDay(d) {
+    activeDay = d;
+    document.getElementById('f-day').value = d;
+    renderTabs();
+    renderEvents();
+  }
+
+  function fmtTime(t) {
+    if (!t) return '?';
+    const [h, m] = t.split(':').map(Number);
+    if (isNaN(h)) return t;
+    return `${h % 12 || 12}:${String(m).padStart(2,'0')}${h >= 12 ? 'pm' : 'am'}`;
+  }
+
+  function renderEvents() {
+    const el = document.getElementById('events-list');
+    const evs = records.filter(r => r.day === activeDay).sort((a,b) => a.start.localeCompare(b.start));
+    if (!evs.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-icon">◯</div>No events on ${activeDay}<br><span style="font-size:12px;display:block;margin-top:4px">Tap + to add one</span></div>`;
+      return;
+    }
+    el.innerHTML = evs.map(ev => {
+      const hex = COLORS[ev.color.toLowerCase()] || '#555250';
+      const locHtml = ev.loc ? `<div class="event-loc"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="flex-shrink:0;opacity:.5"><path d="M5 0C2.79 0 1 1.79 1 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5C4.17 5.5 3.5 4.83 3.5 4S4.17 2.5 5 2.5 6.5 3.17 6.5 4 5.83 5.5 5 5.5z" fill="currentColor"/></svg>${ev.loc}</div>` : '';
+      return `<div class="event-card">
+        <div class="event-stripe" style="background:${hex}"></div>
+        <div class="event-main">
+          <div class="event-name">${ev.name || 'Untitled'}</div>
+          <div class="event-time">${fmtTime(ev.start)} – ${fmtTime(ev.end)}</div>
+          ${locHtml}
+        </div>
+        <button class="event-del" onclick="deleteEvent('${ev.id}',event)" aria-label="Delete">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  function openAdd() {
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-day').value = activeDay;
+    document.getElementById('f-start').value = '';
+    document.getElementById('f-end').value = '';
+    document.getElementById('f-loc').value = '';
+    selectedColor = '';
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    document.getElementById('save-btn').disabled = false;
+    document.getElementById('modal').classList.add('show');
+    setTimeout(() => document.getElementById('f-name').focus(), 300);
+  }
+
+  function closeModal() { document.getElementById('modal').classList.remove('show'); }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+  async function saveEvent() {
+    const name  = document.getElementById('f-name').value.trim();
+    const day   = document.getElementById('f-day').value;
+    const start = document.getElementById('f-start').value;
+    const end   = document.getElementById('f-end').value;
+    const loc   = document.getElementById('f-loc').value.trim();
+    if (!name || !day || !start || !end) { alert('Please fill in name, day, start and end time.'); return; }
+    document.getElementById('save-btn').disabled = true;
+    setStatus('Saving…');
+    const fields = {
+      [FIELDS.name]:  name,
+      [FIELDS.day]:   day,
+      [FIELDS.start]: start,
+      [FIELDS.end]:   end
+    };
+    if (loc)          fields[FIELDS.loc]   = loc;
+    if (selectedColor) fields[FIELDS.color] = selectedColor;
+    try {
+      await atFetch('POST', '', { records: [{ fields }] });
+      closeModal();
+      await loadEvents();
+    } catch(e) {
+      setStatus('Save failed — check API key');
+      document.getElementById('save-btn').disabled = false;
+    }
+  }
+
+  async function deleteEvent(id, e) {
+    e.stopPropagation();
+    if (!confirm('Remove this event?')) return;
+    setStatus('Removing…');
+    try {
+      await atFetch('DELETE', `/${id}`);
+      await loadEvents();
+    } catch(e) { setStatus('Delete failed'); }
+  }
+
+  loadEvents();
+</script>
+</body>
+</html>
