@@ -166,9 +166,9 @@
 
 <script>
   // ── CONFIG ───────────────────────────────────────────────
-  const AIRTABLE_API_KEY = 'patY6NBplXoNFImHj.38510f58830f683b85ece47317e1c9c4c3e7db0e487a6ff356e761641881540f';
-  const BASE_ID  = 'app87ZRy0mgBmMAUS';
-  const TABLE_ID = 'tblOtdB1fkU6s0eNc';
+  const AIRTABLE_TOKEN = 'patY6NBplXoNFImHj.38510f58830f683b85ece47317e1c9c4c3e7db0e487a6ff356e761641881540f';
+  const BASE_ID   = 'app87ZRy0mgBmMAUS';
+  const TABLE_NAME = 'Schedule';
   const FIELDS = {
     name:  'fldHHfDnx5BuJ7hop',
     day:   'fld1y2dyeqJfWJ7ON',
@@ -256,8 +256,8 @@
   }
 
   // ── Airtable helpers ─────────────────────────────────────
-  const AT_BASE = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`;
-  const AT_HEADERS = { 'Authorization': `Bearer ${AIRTABLE_API_KEY}`, 'Content-Type': 'application/json' };
+  const AT_BASE = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}`;
+  const AT_HEADERS = { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
 
   async function atFetch(method, path = '', body = null) {
     const res = await fetch(AT_BASE + path, {
