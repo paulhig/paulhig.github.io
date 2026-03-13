@@ -265,7 +265,10 @@
       headers: AT_HEADERS,
       body: body ? JSON.stringify(body) : undefined
     });
-    if (!res.ok) throw new Error(`Airtable ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Airtable error ${res.status}`);
+    }
     return res.json();
   }
 
@@ -374,19 +377,19 @@
     document.getElementById('save-btn').disabled = true;
     setStatus('Saving…');
     const fields = {
-      [FIELDS.name]:  name,
-      [FIELDS.day]:   day,
-      [FIELDS.start]: start,
-      [FIELDS.end]:   end
+      'Event Name': name,
+      'Day':        day,
+      'Start Time': start,
+      'End Time':   end
     };
-    if (loc)          fields[FIELDS.loc]   = loc;
-    if (selectedColor) fields[FIELDS.color] = selectedColor;
+    if (loc)           fields['Location'] = loc;
+    if (selectedColor) fields['Color']    = selectedColor;
     try {
       await atFetch('POST', '', { records: [{ fields }] });
       closeModal();
       await loadEvents();
     } catch(e) {
-      setStatus('Save failed — check API key');
+      setStatus('Error: ' + e.message);
       document.getElementById('save-btn').disabled = false;
     }
   }
@@ -398,7 +401,7 @@
     try {
       await atFetch('DELETE', `/${id}`);
       await loadEvents();
-    } catch(e) { setStatus('Delete failed'); }
+    } catch(e) { setStatus('Delete error: ' + e.message); }
   }
 
   loadEvents();
