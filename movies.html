@@ -4,6 +4,13 @@ title: Movie Watchlist
 favicon: 🎬
 ---
 
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Movies">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" id="pwa-manifest">
+
 <style>
   .watchlist-container {
     max-width: 900px;
@@ -173,6 +180,7 @@ favicon: 🎬
     border: 2px solid #ddd;
     border-radius: 5px;
     transition: border-color 0.2s;
+    box-sizing: border-box;
   }
   .search-input:focus {
     outline: none;
@@ -188,35 +196,15 @@ favicon: 🎬
     font-size: 1em;
     transition: background 0.2s;
   }
-  .btn:hover {
-    background: #1976D2;
-  }
-  .btn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
-  .btn-success {
-    background: #4CAF50;
-  }
-  .btn-success:hover {
-    background: #45a049;
-  }
-  .btn-danger {
-    background: #f44336;
-  }
-  .btn-danger:hover {
-    background: #d32f2f;
-  }
-  .btn-watch-next {
-    background: #FF9800;
-  }
-  .btn-watch-next:hover {
-    background: #F57C00;
-  }
-  .btn-small {
-    padding: 6px 12px;
-    font-size: 0.9em;
-  }
+  .btn:hover { background: #1976D2; }
+  .btn:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-success { background: #4CAF50; }
+  .btn-success:hover { background: #45a049; }
+  .btn-danger { background: #f44336; }
+  .btn-danger:hover { background: #d32f2f; }
+  .btn-watch-next { background: #FF9800; }
+  .btn-watch-next:hover { background: #F57C00; }
+  .btn-small { padding: 6px 12px; font-size: 0.9em; }
   .filters {
     margin: 20px 0;
     display: flex;
@@ -232,14 +220,8 @@ favicon: 🎬
     border-radius: 5px;
     transition: all 0.2s;
   }
-  .filter-btn:hover {
-    border-color: #4CAF50;
-  }
-  .filter-btn.active {
-    background: #4CAF50;
-    color: white;
-    border-color: #4CAF50;
-  }
+  .filter-btn:hover { border-color: #4CAF50; }
+  .filter-btn.active { background: #4CAF50; color: white; border-color: #4CAF50; }
   .message {
     padding: 15px;
     border-radius: 5px;
@@ -250,16 +232,8 @@ favicon: 🎬
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .message.error {
-    background: #ffebee;
-    color: #c62828;
-    border-left: 4px solid #c62828;
-  }
-  .message.success {
-    background: #e8f5e9;
-    color: #2e7d32;
-    border-left: 4px solid #2e7d32;
-  }
+  .message.error { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+  .message.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
   .stats {
     display: flex;
     gap: 20px;
@@ -274,32 +248,57 @@ favicon: 🎬
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     text-align: center;
   }
-  .stat-number {
-    font-size: 2em;
-    font-weight: bold;
-    color: #2196F3;
+  .stat-number { font-size: 2em; font-weight: bold; color: #2196F3; }
+  .stat-label { color: #666; font-size: 0.9em; }
+  #movieSearch { width: 100% !important; box-sizing: border-box; }
+  #searchInput { box-sizing: border-box; }
+
+  /* PWA install banner */
+  .install-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1a1a2e;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    animation: slideIn 0.3s;
   }
-  .stat-label {
-    color: #666;
-    font-size: 0.9em;
+  .install-banner p { flex: 1; margin: 0; font-size: 13px; line-height: 1.4; }
+  .install-banner strong { display: block; margin-bottom: 2px; font-size: 14px; }
+  .install-btn {
+    padding: 8px 14px;
+    background: white;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
   }
-  #movieSearch {
-  width: 100% !important;
-  box-sizing: border-box;
-}
-  #searchInput {
-  box-sizing: border-box;
-}
+  .install-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
 </style>
 
 <div class="watchlist-container">
+  <div id="install-area"></div>
+
   <div class="header">
     <h1>🎬 Movie Watchlist</h1>
     <p>Tracking the movies we want to watch and rating the ones we've seen!</p>
   </div>
-  
+
   <div id="message"></div>
-  
+
   <div class="stats">
     <div class="stat-box">
       <div class="stat-number" id="totalCount">0</div>
@@ -314,44 +313,34 @@ favicon: 🎬
       <div class="stat-label">To Watch</div>
     </div>
   </div>
-  
-  <!-- SEARCH BOX -->
+
   <div class="search-box">
-    <input 
-      type="text" 
-      id="searchInput" 
-      class="search-input" 
+    <input
+      type="text"
+      id="searchInput"
+      class="search-input"
       placeholder="🔍 Search your watchlist by title, director, actor, or genre..."
       onkeyup="searchMovies()"
     />
   </div>
-  
+
   <div class="filters">
-    <button class="filter-btn active" onclick="filterMovies('all')">
-      📋 All Movies
-    </button>
-    <button class="filter-btn" onclick="filterMovies('to-watch')">
-      ⏳ To Watch
-    </button>
-    <button class="filter-btn" onclick="filterMovies('watched')">
-      ✅ Watched
-    </button>
+    <button class="filter-btn active" onclick="filterMovies('all')">📋 All Movies</button>
+    <button class="filter-btn" onclick="filterMovies('to-watch')">⏳ To Watch</button>
+    <button class="filter-btn" onclick="filterMovies('watched')">✅ Watched</button>
   </div>
-  
+
   <div class="add-form">
     <h3>➕ Add New Movie</h3>
-    
-    <!-- AUTO-FILL SEARCH -->
     <div class="search-container">
-      <input 
-        type="text" 
-        id="movieSearch" 
+      <input
+        type="text"
+        id="movieSearch"
         placeholder="🔍 Search for a movie to auto-fill details..."
         onkeyup="searchOMDb()"
       />
       <div id="searchResults" class="search-results" style="display: none;"></div>
     </div>
-    
     <div class="form-row">
       <input type="text" id="movieTitle" placeholder="Movie title *" />
       <input type="number" id="movieYear" placeholder="Year *" min="1900" max="2030" />
@@ -361,11 +350,9 @@ favicon: 🎬
       <input type="text" id="movieDirector" placeholder="Director (optional)" />
       <input type="text" id="movieActors" placeholder="Actors (optional)" />
     </div>
-    <button class="btn btn-success" onclick="addMovie()">
-      Add to Watchlist
-    </button>
+    <button class="btn btn-success" onclick="addMovie()">Add to Watchlist</button>
   </div>
-  
+
   <div id="movieGrid">
     <div class="loading">📽️ Loading movies...</div>
   </div>
@@ -381,23 +368,86 @@ const TABLE_NAME = 'Movies';
 const OMDB_API_KEY = '92337e1c';
 
 let movies = [];
-let allMovies = []; // Store unfiltered list for search
+let allMovies = [];
 let currentFilter = 'all';
 let searchTimeout;
+let deferredPrompt = null;
+
+// ============================================
+// PWA SETUP
+// ============================================
+const manifest = {
+  name: 'Movie Watchlist',
+  short_name: 'Movies',
+  description: 'Track movies to watch and rate the ones you have seen',
+  start_url: '/movies.html',
+  display: 'standalone',
+  background_color: '#ffffff',
+  theme_color: '#1a1a2e',
+  orientation: 'portrait',
+  icons: [
+    {
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E",
+      sizes: '192x192',
+      type: 'image/svg+xml'
+    },
+    {
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%231a1a2e'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E",
+      sizes: '512x512',
+      type: 'image/svg+xml'
+    }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
+
+// Android/Chrome install prompt
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner('pwa');
+});
+
+// iOS install hint
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (isIos && !isStandalone) {
+  setTimeout(() => showInstallBanner('ios'), 2000);
+}
+
+function showInstallBanner(type) {
+  const area = document.getElementById('install-area');
+  if (type === 'pwa') {
+    area.innerHTML = `<div class="install-banner">
+      <p><strong>Add to home screen</strong>Install for quick access anytime</p>
+      <button class="install-btn" onclick="triggerInstall()">Install</button>
+      <button class="install-close" onclick="this.closest('.install-banner').remove()">×</button>
+    </div>`;
+  } else {
+    area.innerHTML = `<div class="install-banner">
+      <p><strong>Add to home screen</strong>Tap the share icon then "Add to Home Screen"</p>
+      <button class="install-close" onclick="this.closest('.install-banner').remove()">×</button>
+    </div>`;
+  }
+}
+
+async function triggerInstall() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-area').innerHTML = '';
+}
 
 // ============================================
 // OMDB API AUTO-FILL
 // ============================================
-
 function searchOMDb() {
   const query = document.getElementById('movieSearch').value.trim();
-  
   if (query.length < 3) {
     document.getElementById('searchResults').style.display = 'none';
     return;
   }
-  
-  // Debounce search
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
     try {
@@ -405,11 +455,10 @@ function searchOMDb() {
         `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
       );
       const data = await response.json();
-      
       if (data.Response === 'True') {
         displaySearchResults(data.Search);
       } else {
-        document.getElementById('searchResults').innerHTML = 
+        document.getElementById('searchResults').innerHTML =
           '<div style="padding: 15px; color: #666;">No movies found. Try a different search.</div>';
         document.getElementById('searchResults').style.display = 'block';
       }
@@ -421,18 +470,15 @@ function searchOMDb() {
 
 function displaySearchResults(results) {
   const container = document.getElementById('searchResults');
-  
   container.innerHTML = results.slice(0, 5).map(movie => `
     <div class="search-result-item" onclick="selectMovie('${movie.imdbID}')">
-      <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/40x60?text=No+Image'}" 
-           alt="${movie.Title}">
+      <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/40x60?text=No+Image'}" alt="${movie.Title}">
       <div class="search-result-info">
         <div class="search-result-title">${movie.Title}</div>
         <div class="search-result-meta">${movie.Year}</div>
       </div>
     </div>
   `).join('');
-  
   container.style.display = 'block';
 }
 
@@ -442,19 +488,14 @@ async function selectMovie(imdbID) {
       `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbID}&plot=short`
     );
     const movie = await response.json();
-    
     if (movie.Response === 'True') {
-      // Auto-fill form fields
       document.getElementById('movieTitle').value = movie.Title;
       document.getElementById('movieYear').value = movie.Year;
       document.getElementById('movieGenre').value = movie.Genre;
       document.getElementById('movieDirector').value = movie.Director;
       document.getElementById('movieActors').value = movie.Actors;
-      
-      // Clear search
       document.getElementById('movieSearch').value = '';
       document.getElementById('searchResults').style.display = 'none';
-      
       showMessage(`Auto-filled details for "${movie.Title}"! ✨`, 'success');
     }
   } catch (error) {
@@ -463,7 +504,6 @@ async function selectMovie(imdbID) {
   }
 }
 
-// Close search results when clicking outside
 document.addEventListener('click', function(event) {
   if (!event.target.closest('.search-container')) {
     document.getElementById('searchResults').style.display = 'none';
@@ -473,46 +513,35 @@ document.addEventListener('click', function(event) {
 // ============================================
 // SEARCH FUNCTIONALITY
 // ============================================
-
 function searchMovies() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  
   if (query === '') {
     movies = [...allMovies];
   } else {
-    movies = allMovies.filter(movie => 
+    movies = allMovies.filter(movie =>
       movie.title.toLowerCase().includes(query) ||
       movie.genre.toLowerCase().includes(query) ||
       movie.director.toLowerCase().includes(query) ||
       movie.actors.toLowerCase().includes(query)
     );
   }
-  
   renderMovies();
 }
 
 // ============================================
 // AIRTABLE API FUNCTIONS
 // ============================================
-
 async function loadMovies() {
   try {
     const response = await fetch(
       `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?sort%5B0%5D%5Bfield%5D=Date%20Added&sort%5B0%5D%5Bdirection%5D=desc`,
-      {
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_TOKEN}`
-        }
-      }
+      { headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` } }
     );
-    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error?.message || 'Failed to load movies');
     }
-    
     const data = await response.json();
-    
     allMovies = data.records.map(record => ({
       id: record.id,
       title: record.fields.Title || 'Untitled',
@@ -525,19 +554,14 @@ async function loadMovies() {
       dateAdded: record.fields['Date Added'] || '',
       watchNext: record.fields['Watch Next'] || false
     }));
-    
     movies = [...allMovies];
-    
     updateStats();
     renderMovies();
-    
   } catch (error) {
     console.error('Error loading movies:', error);
-    document.getElementById('movieGrid').innerHTML = 
-      `<div class="message error">
-        <strong>Error loading movies:</strong> ${error.message}<br>
-        <small>Check your Airtable token and base ID in the code.</small>
-      </div>`;
+    document.getElementById('movieGrid').innerHTML =
+      `<div class="message error"><strong>Error loading movies:</strong> ${error.message}<br>
+      <small>Check your Airtable token and base ID in the code.</small></div>`;
   }
 }
 
@@ -547,58 +571,35 @@ async function addMovie() {
   const genre = document.getElementById('movieGenre').value.trim() || 'Unknown';
   const director = document.getElementById('movieDirector').value.trim();
   const actors = document.getElementById('movieActors').value.trim();
-  
-  if (!title) {
-    showMessage('Please enter a movie title!', 'error');
-    return;
-  }
-  
-  if (!year || year < 1900 || year > 2030) {
-    showMessage('Please enter a valid year (1900-2030)!', 'error');
-    return;
-  }
-  
+  if (!title) { showMessage('Please enter a movie title!', 'error'); return; }
+  if (!year || year < 1900 || year > 2030) { showMessage('Please enter a valid year (1900-2030)!', 'error'); return; }
   try {
     const response = await fetch(
       `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`,
       {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fields: {
-            Title: title,
-            Year: year,
-            Genre: genre,
-            Director: director,
-            Actors: actors,
-            Watched: false,
-            Rating: 0,
-            'Date Added': new Date().toISOString().split('T')[0],
-            'Watch Next': false
+            Title: title, Year: year, Genre: genre, Director: director,
+            Actors: actors, Watched: false, Rating: 0,
+            'Date Added': new Date().toISOString().split('T')[0], 'Watch Next': false
           }
         })
       }
     );
-    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error?.message || 'Failed to add movie');
     }
-    
-    // Clear form
     document.getElementById('movieTitle').value = '';
     document.getElementById('movieYear').value = '';
     document.getElementById('movieGenre').value = '';
     document.getElementById('movieDirector').value = '';
     document.getElementById('movieActors').value = '';
     document.getElementById('movieSearch').value = '';
-    
     showMessage(`"${title}" added to your watchlist! 🎉`, 'success');
     await loadMovies();
-    
   } catch (error) {
     console.error('Error adding movie:', error);
     showMessage('Error adding movie: ' + error.message, 'error');
@@ -611,22 +612,16 @@ async function updateMovie(id, fields) {
       `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,
       {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields })
       }
     );
-    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error?.message || 'Failed to update movie');
     }
-    
     showMessage('Updated! ✅', 'success');
     await loadMovies();
-    
   } catch (error) {
     console.error('Error updating movie:', error);
     showMessage('Error updating: ' + error.message, 'error');
@@ -635,26 +630,17 @@ async function updateMovie(id, fields) {
 
 async function deleteMovie(id, title) {
   if (!confirm(`Delete "${title}"? This cannot be undone!`)) return;
-  
   try {
     const response = await fetch(
       `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_TOKEN}`
-        }
-      }
+      { method: 'DELETE', headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` } }
     );
-    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error?.message || 'Failed to delete movie');
     }
-    
     showMessage(`"${title}" deleted! 🗑️`, 'success');
     await loadMovies();
-    
   } catch (error) {
     console.error('Error deleting movie:', error);
     showMessage('Error deleting: ' + error.message, 'error');
@@ -664,91 +650,67 @@ async function deleteMovie(id, title) {
 // ============================================
 // WATCH NEXT FUNCTION
 // ============================================
-
 async function toggleWatchNext(id, makeWatchNext) {
   if (makeWatchNext) {
     const currentWatchNext = movies.filter(m => m.watchNext);
     for (const movie of currentWatchNext) {
-      if (movie.id !== id) {
-        await updateMovie(movie.id, { 'Watch Next': false });
-      }
+      if (movie.id !== id) await updateMovie(movie.id, { 'Watch Next': false });
     }
   }
-  
   await updateMovie(id, { 'Watch Next': makeWatchNext });
 }
 
 // ============================================
 // UI FUNCTIONS
 // ============================================
-
 function updateStats() {
   const total = allMovies.length;
   const watched = allMovies.filter(m => m.watched).length;
-  const toWatch = total - watched;
-  
   document.getElementById('totalCount').textContent = total;
   document.getElementById('watchedCount').textContent = watched;
-  document.getElementById('toWatchCount').textContent = toWatch;
+  document.getElementById('toWatchCount').textContent = total - watched;
 }
 
 function renderMovies() {
   const grid = document.getElementById('movieGrid');
-  
   const filtered = movies.filter(m => {
     if (currentFilter === 'all') return true;
     if (currentFilter === 'watched') return m.watched;
     if (currentFilter === 'to-watch') return !m.watched;
   });
-  
   if (filtered.length === 0) {
     const searchQuery = document.getElementById('searchInput').value;
-    if (searchQuery) {
-      grid.innerHTML = '<div class="loading">No movies match your search. Try different keywords! 🔍</div>';
-    } else {
-      grid.innerHTML = '<div class="loading">No movies found. Add one above! 🎬</div>';
-    }
+    grid.innerHTML = searchQuery
+      ? '<div class="loading">No movies match your search. Try different keywords! 🔍</div>'
+      : '<div class="loading">No movies found. Add one above! 🎬</div>';
     return;
   }
-  
   const sorted = filtered.sort((a, b) => {
     if (a.watchNext && !b.watchNext) return -1;
     if (!a.watchNext && b.watchNext) return 1;
     return 0;
   });
-  
   grid.innerHTML = sorted.map(movie => {
     const stars = '⭐'.repeat(movie.rating);
-    
     return `
       <div class="movie-card ${movie.watched ? 'watched' : ''} ${movie.watchNext ? 'watch-next' : ''}">
-        
         ${movie.watchNext ? '<div class="watch-next-banner">🔥 WATCH NEXT</div>' : ''}
-        
         <h3>${movie.title}</h3>
-        <p class="movie-meta">
-          📅 ${movie.year} | 🎭 ${movie.genre}
-        </p>
+        <p class="movie-meta">📅 ${movie.year} | 🎭 ${movie.genre}</p>
         ${movie.director ? `<p class="movie-details"><strong>Director:</strong> ${movie.director}</p>` : ''}
         ${movie.actors ? `<p class="movie-details"><strong>Cast:</strong> ${movie.actors}</p>` : ''}
-        ${movie.watched && movie.rating > 0 ? 
-          `<div class="movie-rating">${stars}</div>` : ''}
-        
+        ${movie.watched && movie.rating > 0 ? `<div class="movie-rating">${stars}</div>` : ''}
         <div class="movie-actions">
           ${!movie.watched ? `
-            <button class="btn btn-small btn-watch-next" 
-                    onclick="toggleWatchNext('${movie.id}', ${!movie.watchNext})">
+            <button class="btn btn-small btn-watch-next" onclick="toggleWatchNext('${movie.id}', ${!movie.watchNext})">
               ${movie.watchNext ? '❌ Remove' : '🔥 Watch Next'}
-            </button>
-          ` : ''}
-          
-          <button class="btn btn-small ${movie.watched ? '' : 'btn-success'}" 
+            </button>` : ''}
+          <button class="btn btn-small ${movie.watched ? '' : 'btn-success'}"
                   onclick="toggleWatched('${movie.id}', ${!movie.watched})">
             ${movie.watched ? '↩️ Mark Unwatched' : '✅ Mark Watched'}
           </button>
-          
           ${movie.watched ? `
-            <select onchange="setRating('${movie.id}', this.value)" 
+            <select onchange="setRating('${movie.id}', this.value)"
                     style="padding:8px; border-radius:4px; border:1px solid #ddd;">
               <option value="0" ${movie.rating===0?'selected':''}>⭐ Rate movie</option>
               <option value="1" ${movie.rating===1?'selected':''}>⭐</option>
@@ -756,28 +718,21 @@ function renderMovies() {
               <option value="3" ${movie.rating===3?'selected':''}>⭐⭐⭐</option>
               <option value="4" ${movie.rating===4?'selected':''}>⭐⭐⭐⭐</option>
               <option value="5" ${movie.rating===5?'selected':''}>⭐⭐⭐⭐⭐</option>
-            </select>
-          ` : ''}
-          
-          <button class="btn btn-danger btn-small" 
+            </select>` : ''}
+          <button class="btn btn-danger btn-small"
                   onclick="deleteMovie('${movie.id}', '${movie.title.replace(/'/g, "\\'")}')"
                   style="margin-left:auto;">
             🗑️ Delete
           </button>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
 async function toggleWatched(id, watched) {
   const fields = { Watched: watched };
-  if (!watched) {
-    fields.Rating = 0;
-  }
-  if (watched) {
-    fields['Watch Next'] = false;
-  }
+  if (!watched) fields.Rating = 0;
+  if (watched) fields['Watch Next'] = false;
   await updateMovie(id, fields);
 }
 
@@ -787,12 +742,8 @@ async function setRating(id, rating) {
 
 function filterMovies(filter) {
   currentFilter = filter;
-  
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
-  
   renderMovies();
 }
 
@@ -800,17 +751,12 @@ function showMessage(text, type) {
   const msgDiv = document.getElementById('message');
   msgDiv.className = `message ${type}`;
   msgDiv.textContent = text;
-  
-  setTimeout(() => {
-    msgDiv.className = '';
-    msgDiv.textContent = '';
-  }, 4000);
+  setTimeout(() => { msgDiv.className = ''; msgDiv.textContent = ''; }, 4000);
 }
 
 // ============================================
 // INITIALIZATION
 // ============================================
-
 loadMovies();
 setInterval(loadMovies, 30000);
 </script>
