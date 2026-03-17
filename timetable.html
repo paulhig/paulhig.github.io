@@ -68,10 +68,26 @@
   .empty-state { padding: 60px 20px; text-align: center; color: var(--text3); font-size: 14px; line-height: 1.6; }
   .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.2; }
   .status-bar { text-align: center; font-size: 11px; color: var(--text3); padding: 6px 16px 0; flex-shrink: 0; min-height: 22px; }
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--text3); display: inline-block;
+    margin-left: 8px; vertical-align: middle;
+    transition: background .3s;
+  }
+  .sync-dot.syncing {
+    background: #EF9F27;
+    animation: pulse .9s ease-in-out infinite;
+  }
+  .sync-dot.ok { background: #1D9E75; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
   .modal-overlay.show { display: flex; }
   .modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 480px; padding: 0 20px calc(var(--safe-bottom) + 28px); border-top: 0.5px solid var(--border2); animation: slideUp .28s cubic-bezier(0.32,0.72,0,1); }
+  @keyframes pulse {
+    0%,100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+  }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 20px; }
   .sheet-title { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
@@ -107,6 +123,11 @@
     letter-spacing: 0.04em; text-transform: uppercase;
   }
   .event-main { cursor: pointer; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .syncing { animation: pulse 1s ease-in-out infinite; background: #EF9F27 !important; }
+  .sync-ok  { background: #1D9E75 !important; }
+  .sync-err { background: #E24B4A !important; }
 
   .install-banner { margin: 0 16px 10px; padding: 12px 14px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; animation: fadeIn .3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
@@ -144,7 +165,12 @@
   </div>
 
   <div id="install-area"></div>
-  <div class="status-bar" id="status"></div>
+  <div class="status-bar" id="status">
+    <span id="sync-dot" style="display:none">
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text3);vertical-align:middle;margin-right:4px;animation:pulse 1.2s ease-in-out infinite"></span>syncing
+    </span>
+    <span id="status-text"></span>
+  </div>
   <div class="content">
     <div class="events-list" id="events-list"></div>
   </div>
@@ -398,10 +424,39 @@
     };
   }
 
-  function setStatus(msg) { document.getElementById('status').textContent = msg; }
+  function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
+  function showSync() {
+    document.getElementById('sync-dot').style.display = 'inline';
+    document.getElementById('status-text').textContent = '';
+  }
+  function hideSync(msg) {
+    document.getElementById('sync-dot').style.display = 'none';
+    setStatus(msg || '');
+  }
 
-  async function loadEvents() {
-    setStatus(t().loading);
+  const CACHE_KEY = 'tt_cache_v1';
+
+  function loadFromCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return false;
+      records = JSON.parse(raw);
+      renderTabs();
+      renderEvents();
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function saveToCache(recs) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(recs)); } catch(e) {}
+  }
+
+  async function loadEvents(silent) {
+    if (!silent) {
+      const hasCached = loadFromCache();
+      if (!hasCached) setStatus(t().loading);
+    }
+    showSync();
     try {
       let all = [], offset = null;
       do {
@@ -411,11 +466,14 @@
         offset = data.offset || null;
       } while (offset);
       records = all;
-      setStatus(records.length ? t().eventsCount(records.length) : '');
+      saveToCache(records);
+      hideSync(records.length ? t().eventsCount(records.length) : '');
+      renderTabs();
+      renderEvents();
     } catch (e) {
-      setStatus(t().errLoad); records = [];
+      hideSync('');
+      if (!silent) setStatus(t().errLoad);
     }
-    renderTabs(); renderEvents();
   }
 
   // ── Sort order ────────────────────────────────────────────
