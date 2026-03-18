@@ -254,6 +254,51 @@
   #movieSearch { width: 100% !important; box-sizing: border-box; }
   #searchInput { box-sizing: border-box; }
 
+  /* Search mode toggle */
+  .search-toggle {
+    display: flex;
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 3px;
+    gap: 3px;
+    margin-bottom: 10px;
+    width: fit-content;
+  }
+  .search-toggle-btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .search-toggle-btn.active {
+    background: white;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  }
+  .actor-results-header {
+    padding: 8px 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+  }
+  .search-result-item .search-result-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 99px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 600;
+    white-space: nowrap;
+  }
   /* PWA install banner */
   .install-banner {
     display: flex;
@@ -334,6 +379,10 @@
   <div class="add-form">
     <h3>➕ Add New Movie</h3>
     <div class="search-container">
+      <div class="search-toggle">
+        <button class="search-toggle-btn active" id="btn-by-title" onclick="setSearchMode('title')">🎬 By title</button>
+        <button class="search-toggle-btn" id="btn-by-actor" onclick="setSearchMode('actor')">🎭 By actor / director</button>
+      </div>
       <input
         type="text"
         id="movieSearch"
@@ -443,6 +492,20 @@ async function triggerInstall() {
 // ============================================
 // OMDB API AUTO-FILL
 // ============================================
+let searchMode = 'title'; // 'title' or 'actor'
+
+function setSearchMode(mode) {
+  searchMode = mode;
+  document.getElementById('btn-by-title').classList.toggle('active', mode === 'title');
+  document.getElementById('btn-by-actor').classList.toggle('active', mode === 'actor');
+  document.getElementById('movieSearch').placeholder =
+    mode === 'title'
+      ? '🔍 Search for a movie to auto-fill details...'
+      : '🎭 Search by actor or director name (e.g. Kevin Bacon)...';
+  document.getElementById('movieSearch').value = '';
+  document.getElementById('searchResults').style.display = 'none';
+}
+
 function searchOMDb() {
   const query = document.getElementById('movieSearch').value.trim();
   if (query.length < 3) {
@@ -451,32 +514,113 @@ function searchOMDb() {
   }
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
-    try {
-      const response = await fetch(
-        `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
-      );
-      const data = await response.json();
-      if (data.Response === 'True') {
-        displaySearchResults(data.Search);
-      } else {
-        document.getElementById('searchResults').innerHTML =
-          '<div style="padding: 15px; color: #666;">No movies found. Try a different search.</div>';
-        document.getElementById('searchResults').style.display = 'block';
-      }
-    } catch (error) {
-      console.error('OMDb search error:', error);
+    if (searchMode === 'actor') {
+      await searchByPerson(query);
+    } else {
+      await searchByTitle(query);
     }
   }, 300);
 }
 
-function displaySearchResults(results) {
+async function searchByTitle(query) {
+  try {
+    const response = await fetch(
+      `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
+    );
+    const data = await response.json();
+    if (data.Response === 'True') {
+      displaySearchResults(data.Search, 'title');
+    } else {
+      document.getElementById('searchResults').innerHTML =
+        '<div style="padding: 15px; color: #666;">No movies found. Try a different search.</div>';
+      document.getElementById('searchResults').style.display = 'block';
+    }
+  } catch (error) {
+    console.error('OMDb search error:', error);
+  }
+}
+
+async function searchByPerson(query) {
   const container = document.getElementById('searchResults');
-  container.innerHTML = results.slice(0, 5).map(movie => `
+  container.innerHTML = '<div style="padding:12px;color:#666;font-size:0.9em">Searching...</div>';
+  container.style.display = 'block';
+
+  // OMDB doesn't have a dedicated person search endpoint, so we search movies
+  // and then fetch each result to check if the person appears in the cast/crew
+  try {
+    // Search with person name as query — OMDB will return some matches
+    // We also fetch multiple pages to get more candidates
+    const [res1, res2] = await Promise.all([
+      fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie&page=1`),
+      fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie&page=2`),
+    ]);
+    const [d1, d2] = await Promise.all([res1.json(), res2.json()]);
+
+    const candidates = [
+      ...(d1.Response === 'True' ? d1.Search : []),
+      ...(d2.Response === 'True' ? d2.Search : []),
+    ];
+
+    if (!candidates.length) {
+      container.innerHTML = '<div style="padding:15px;color:#666;">No results found. Try a full name (e.g. "Kevin Bacon").</div>';
+      return;
+    }
+
+    // Fetch full details for each candidate to check cast/crew
+    container.innerHTML = '<div class="actor-results-header">Checking cast & crew...</div>';
+    const details = await Promise.all(
+      candidates.slice(0, 10).map(m =>
+        fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${m.imdbID}`)
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    );
+
+    const queryLower = query.toLowerCase();
+    const matches = details
+      .filter(m => m && m.Response === 'True')
+      .filter(m =>
+        (m.Actors  || '').toLowerCase().includes(queryLower) ||
+        (m.Director|| '').toLowerCase().includes(queryLower) ||
+        (m.Writer  || '').toLowerCase().includes(queryLower)
+      );
+
+    if (!matches.length) {
+      container.innerHTML = `<div style="padding:15px;color:#666;">No movies found featuring "<strong>${query}</strong>". Try their full name.</div>`;
+      return;
+    }
+
+    displaySearchResults(matches.map(m => ({
+      imdbID: m.imdbID,
+      Title:  m.Title,
+      Year:   m.Year,
+      Poster: m.Poster,
+      // Show what role the person played
+      role: (m.Director||'').toLowerCase().includes(queryLower) ? 'Director'
+          : (m.Writer  ||'').toLowerCase().includes(queryLower) ? 'Writer'
+          : 'Actor',
+    })), 'actor', query);
+
+  } catch (error) {
+    container.innerHTML = '<div style="padding:15px;color:#c62828;">Search failed. Please try again.</div>';
+    console.error('Actor search error:', error);
+  }
+}
+
+function displaySearchResults(results, mode, personQuery) {
+  const container = document.getElementById('searchResults');
+  const header = mode === 'actor' && personQuery
+    ? `<div class="actor-results-header">${results.length} film${results.length !== 1 ? 's' : ''} featuring "${personQuery}"</div>`
+    : '';
+  container.innerHTML = header + results.slice(0, 8).map(movie => `
     <div class="search-result-item" onclick="selectMovie('${movie.imdbID}')">
-      <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/40x60?text=No+Image'}" alt="${movie.Title}">
+      <img src="${movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/40x60?text=No+Image'}" alt="${movie.Title}">
       <div class="search-result-info">
         <div class="search-result-title">${movie.Title}</div>
-        <div class="search-result-meta">${movie.Year}</div>
+        <div class="search-result-meta" style="display:flex;align-items:center;gap:6px">
+          ${movie.Year}
+          ${movie.role ? `<span class="search-result-badge">${movie.role}</span>` : ''}
+        </div>
       </div>
     </div>
   `).join('');
