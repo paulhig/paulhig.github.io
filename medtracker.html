@@ -38,7 +38,7 @@
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', sans-serif; overscroll-behavior: none; }
 
 /* App shell */
-.app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
+.app { display: flex; flex-direction: column; height: 100%; width: 100%; }
 .app-header {
   padding: calc(var(--safe-top) + 14px) 20px 14px;
   background: var(--surface);
@@ -297,8 +297,7 @@ input:focus, select:focus { border-color: var(--accent); background: var(--surfa
 .range-btn.active { background: var(--accent-light); color: var(--accent); border-color: #c7d2fe; }
 
 @media (min-width: 481px) {
-  .app { border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
-  .modal-sheet { border-radius: 20px; margin-bottom: 40px; }
+  .modal-sheet { border-radius: 20px; margin-bottom: 40px; max-width: 480px; }
   .modal-overlay { align-items: center; }
 }
 @media (prefers-color-scheme: dark) {
@@ -391,6 +390,15 @@ input:focus, select:focus { border-color: var(--accent); background: var(--surfa
       </select>
     </div>
     <div class="field">
+      <label>Time of day</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px" id="time-of-day-picker">
+        <button type="button" class="tod-btn" data-tod="morning" onclick="toggleTOD('morning')">🌅 Morning</button>
+        <button type="button" class="tod-btn" data-tod="afternoon" onclick="toggleTOD('afternoon')">☀️ Afternoon</button>
+        <button type="button" class="tod-btn" data-tod="evening" onclick="toggleTOD('evening')">🌆 Evening</button>
+        <button type="button" class="tod-btn" data-tod="night" onclick="toggleTOD('night')">🌙 Night</button>
+      </div>
+    </div>
+    <div class="field">
       <label>Colour</label>
       <div class="color-grid" id="color-grid"></div>
     </div>
@@ -426,6 +434,7 @@ const MOOD_EMOJI = ['','😣','😟','😕','😐','🙂','😊','😀','😄','
 
 let reportRange = 7;
 let selectedColor = COLORS[0];
+let selectedTOD = [];
 let selectedFX = {}; // { 'Nausea': 'mild', 'Headache': 'moderate' }
 let deferredPrompt = null;
 
@@ -486,7 +495,7 @@ function renderToday() {
         <div class="dose-name" style="display:flex;align-items:center;gap:6px">
           <span class="med-dot" style="background:${m.color}"></span>${m.name}
         </div>
-        <div class="dose-dose">${m.dose} · ${m.freq}</div>
+        <div class="dose-dose">${m.dose} · ${m.freq}${m.tod && m.tod.length ? ' · ' + m.tod.map(t=>({morning:'🌅 Morning',afternoon:'☀️ Afternoon',evening:'🌆 Evening',night:'🌙 Night'}[t]||t)).join(', ') : ''}</div>
       </div>
       <div class="dose-btns">
         <button class="dose-btn${status==='taken'?' taken':''}" onclick="setDose('${m.id}','taken')">✓ Taken</button>
@@ -650,7 +659,7 @@ function renderMeds() {
       <span class="med-dot" style="background:${m.color}"></span>
       <div class="med-info">
         <div class="med-name">${m.name}</div>
-        <div class="med-dose">${m.dose} · ${m.freq}</div>
+        <div class="med-dose">${m.dose} · ${m.freq}${m.tod && m.tod.length ? ' · ' + m.tod.map(t=>({morning:'🌅',afternoon:'☀️',evening:'🌆',night:'🌙'}[t]||t)).join(' ') : ''}</div>
       </div>
       <button class="med-del" onclick="deleteMed('${m.id}',event)">×</button>
     </div>`).join('');
@@ -663,7 +672,9 @@ function openAddMed() {
   document.getElementById('med-edit-id').value = '';
   document.getElementById('med-modal-title').textContent = 'Add medication';
   selectedColor = COLORS[0];
+  selectedTOD = [];
   buildColorGrid();
+  updateTODButtons();
   document.getElementById('modal-add-med').classList.add('show');
   setTimeout(() => document.getElementById('med-name').focus(), 300);
 }
@@ -677,7 +688,9 @@ function editMed(id) {
   document.getElementById('med-edit-id').value = id;
   document.getElementById('med-modal-title').textContent = 'Edit medication';
   selectedColor = med.color;
+  selectedTOD = med.tod || [];
   buildColorGrid();
+  updateTODButtons();
   document.getElementById('modal-add-med').classList.add('show');
 }
 
@@ -692,18 +705,30 @@ function pickColor(c) {
   buildColorGrid();
 }
 
+function toggleTOD(tod) {
+  if (selectedTOD.includes(tod)) selectedTOD = selectedTOD.filter(t=>t!==tod);
+  else selectedTOD.push(tod);
+  updateTODButtons();
+}
+
+function updateTODButtons() {
+  document.querySelectorAll('.tod-btn').forEach(btn => {
+    btn.classList.toggle('selected', selectedTOD.includes(btn.dataset.tod));
+  });
+}
+
 function saveMed() {
-  const name  = document.getElementById('med-name').value.trim();
-  const dose  = document.getElementById('med-dose').value.trim();
-  const freq  = document.getElementById('med-freq').value;
+  const name   = document.getElementById('med-name').value.trim();
+  const dose   = document.getElementById('med-dose').value.trim();
+  const freq   = document.getElementById('med-freq').value;
   const editId = document.getElementById('med-edit-id').value;
   if (!name) { alert('Please enter a medication name'); return; }
   const meds = DB.meds();
   if (editId) {
     const idx = meds.findIndex(m=>m.id===editId);
-    if (idx>-1) meds[idx] = { ...meds[idx], name, dose, freq, color: selectedColor };
+    if (idx>-1) meds[idx] = { ...meds[idx], name, dose, freq, color: selectedColor, tod: [...selectedTOD] };
   } else {
-    meds.push({ id: Date.now().toString(), name, dose, freq, color: selectedColor, addedAt: DB.today() });
+    meds.push({ id: Date.now().toString(), name, dose, freq, color: selectedColor, tod: [...selectedTOD], addedAt: DB.today() });
   }
   DB.saveMeds(meds);
   document.getElementById('modal-add-med').classList.remove('show');
