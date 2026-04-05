@@ -296,9 +296,49 @@ input:focus, select:focus { border-color: var(--accent); background: var(--surfa
 .range-btn { padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500; border: 1.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; }
 .range-btn.active { background: var(--accent-light); color: var(--accent); border-color: #c7d2fe; }
 
-@media (min-width: 481px) {
-  .modal-sheet { border-radius: 20px; margin-bottom: 40px; max-width: 480px; }
+/* Phone — full width, bottom sheet modal */
+@media (max-width: 599px) {
+  .app { width: 100%; }
+  .modal-sheet { border-radius: 20px 20px 0 0; }
+  .modal-overlay { align-items: flex-end; }
+}
+
+/* Tablet — centered column */
+@media (min-width: 600px) and (max-width: 1023px) {
+  body { background: var(--surface2); }
+  .app {
+    max-width: 540px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    border-left: 0.5px solid var(--border2);
+    border-right: 0.5px solid var(--border2);
+  }
+  .modal-overlay { align-items: flex-end; }
+  .modal-sheet { border-radius: 20px 20px 0 0; max-width: 540px; }
+}
+
+/* Desktop — phone shell card */
+@media (min-width: 1024px) {
+  body {
+    background: var(--surface2);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 0 0;
+    min-height: 100vh;
+  }
+  .app {
+    width: 390px;
+    height: calc(100vh - 80px);
+    border-radius: 28px;
+    border: 0.5px solid var(--border2);
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    flex-shrink: 0;
+  }
   .modal-overlay { align-items: center; }
+  .modal-sheet { border-radius: 20px; margin-bottom: 0; max-width: 380px; }
 }
 @media (prefers-color-scheme: dark) {
   :root {
