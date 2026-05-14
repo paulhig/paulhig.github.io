@@ -10,6 +10,7 @@
 <meta name="theme-color" content="#1a1a2e">
 <title>Movie Watchlist</title>
 <link rel="manifest" id="pwa-manifest">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://yririhzvgwaywnaufebz.supabase.co https://www.omdbapi.com; img-src 'self' data: https: http:; font-src 'self' data:;">
 </head>
 <body>
 <style>
@@ -694,7 +695,7 @@ function searchMovies() {
 }
 
 // ============================================
-// AIRTABLE API FUNCTIONS
+SUPABASE API FUNCTIONS
 // ============================================
 async function loadMovies() {
   try {
@@ -718,7 +719,7 @@ async function loadMovies() {
     console.error('Error loading movies:', error);
     document.getElementById('movieGrid').innerHTML =
       `<div class="message error"><strong>Error loading movies:</strong> ${error.message}<br>
-      <small>Check your Supabase URL and key in the code.</small></div>`;
+      <small>Check your Supabase URL, key, and that RLS is disabled on the movies table.</small></div>`;
   }
 }
 
@@ -753,7 +754,7 @@ async function addMovie() {
 
 async function updateMovie(id, fields) {
   try {
-    // Map camelCase/PascalCase Airtable fields to snake_case Supabase columns
+    // Map fields to snake_case Supabase columns
     const mapped = {};
     if ('Watched'    in fields) mapped.watched    = fields.Watched;
     if ('Rating'     in fields) mapped.rating     = fields.Rating;
