@@ -8,196 +8,44 @@
 <meta name="apple-mobile-web-app-title" content="Movies">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1a2e">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://yririhzvgwaywnaufebz.supabase.co https://www.omdbapi.com; img-src 'self' data: https: http:; font-src 'self' data:;">
 <title>Movie Watchlist</title>
 <link rel="manifest" id="pwa-manifest">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://yririhzvgwaywnaufebz.supabase.co https://www.omdbapi.com; img-src 'self' data: https: http:; font-src 'self' data:;">
 </head>
 <body>
 <style>
-  .watchlist-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  .loading {
-    text-align: center;
-    padding: 40px;
-    font-size: 1.2em;
-    color: #666;
-  }
-  .movie-card {
-    padding: 20px;
-    margin: 15px 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-  }
-  .movie-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
-  .movie-card.watched {
-    opacity: 0.85;
-    border-left: 5px solid #4CAF50;
-  }
-  .movie-card.watch-next {
-    border: 3px solid #FF9800;
-    background: #FFF3E0;
-    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-  }
-  .watch-next-banner {
-    background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
-    color: white;
-    padding: 8px 15px;
-    margin: -20px -20px 15px -20px;
-    font-weight: bold;
-    border-radius: 5px 5px 0 0;
-    text-align: center;
-    font-size: 1.1em;
-    letter-spacing: 1px;
-  }
-  .movie-card h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-  }
-  .movie-meta {
-    color: #666;
-    font-size: 0.9em;
-    margin: 5px 0;
-  }
-  .movie-details {
-    color: #555;
-    font-size: 0.85em;
-    margin: 8px 0;
-    line-height: 1.4;
-  }
-  .movie-details strong {
-    color: #333;
-  }
-  .movie-rating {
-    color: #FFD700;
-    font-size: 1.3em;
-    margin: 10px 0;
-  }
-  .movie-actions {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .add-form {
-    margin: 30px 0;
-    padding: 25px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-  }
-  .add-form h3 {
-    margin-top: 0;
-  }
-  .form-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
-  }
-  .add-form input,
-  .add-form textarea,
-  .search-container input {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1em;
-    flex: 1;
-    min-width: 200px;
-    font-family: inherit;
-  }
-  .add-form textarea {
-    min-height: 60px;
-    resize: vertical;
-  }
-  .search-container {
-    position: relative;
-    margin-bottom: 10px;
-  }
-  .search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1000;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  .search-result-item {
-    padding: 12px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .search-result-item:hover {
-    background: #f5f5f5;
-  }
-  .search-result-item img {
-    width: 40px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 4px;
-  }
-  .search-result-info {
-    flex: 1;
-  }
-  .search-result-title {
-    font-weight: bold;
-    color: #333;
-  }
-  .search-result-meta {
-    font-size: 0.85em;
-    color: #666;
-  }
-  .search-box {
-    margin: 20px 0;
-    padding: 15px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .search-input {
-    width: 100%;
-    padding: 12px;
-    font-size: 1em;
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-  }
-  .search-input:focus {
-    outline: none;
-    border-color: #4CAF50;
-  }
-  .btn {
-    padding: 10px 20px;
-    background: #2196F3;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background 0.2s;
-  }
+  .watchlist-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .loading { text-align: center; padding: 40px; font-size: 1.2em; color: #666; }
+  .movie-card { padding: 20px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.2s; }
+  .movie-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+  .movie-card.watched { opacity: 0.85; border-left: 5px solid #4CAF50; }
+  .movie-card.watch-next { border: 3px solid #FF9800; background: #FFF3E0; box-shadow: 0 4px 12px rgba(255,152,0,0.3); }
+  .watch-next-banner { background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%); color: white; padding: 8px 15px; margin: -20px -20px 15px -20px; font-weight: bold; border-radius: 5px 5px 0 0; text-align: center; font-size: 1.1em; letter-spacing: 1px; }
+  .movie-card h3 { margin: 0 0 10px 0; color: #333; }
+  .movie-meta { color: #666; font-size: 0.9em; margin: 5px 0; }
+  .movie-details { color: #555; font-size: 0.85em; margin: 8px 0; line-height: 1.4; }
+  .movie-details strong { color: #333; }
+  .movie-rating { color: #FFD700; font-size: 1.3em; margin: 10px 0; }
+  .movie-actions { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .add-form { margin: 30px 0; padding: 25px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+  .add-form h3 { margin-top: 0; }
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+  .add-form input, .add-form textarea, .search-container input { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1em; flex: 1; min-width: 200px; font-family: inherit; }
+  .search-container { position: relative; margin-bottom: 10px; }
+  .search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+  .search-result-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; gap: 10px; align-items: center; }
+  .search-result-item:hover { background: #f5f5f5; }
+  .search-result-item img { width: 40px; height: 60px; object-fit: cover; border-radius: 4px; }
+  .search-result-info { flex: 1; }
+  .search-result-title { font-weight: bold; color: #333; }
+  .search-result-meta { font-size: 0.85em; color: #666; display: flex; align-items: center; gap: 6px; }
+  .search-result-badge { font-size: 10px; padding: 2px 6px; border-radius: 99px; background: #e8f5e9; color: #2e7d32; font-weight: 600; white-space: nowrap; }
+  .actor-results-header { padding: 8px 12px; font-size: 0.8em; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #eee; background: #fafafa; }
+  .search-box { margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .search-input { width: 100%; padding: 12px; font-size: 1em; border: 2px solid #ddd; border-radius: 5px; transition: border-color 0.2s; box-sizing: border-box; }
+  .search-input:focus { outline: none; border-color: #4CAF50; }
+  .btn { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background 0.2s; }
   .btn:hover { background: #1976D2; }
   .btn:disabled { background: #ccc; cursor: not-allowed; }
   .btn-success { background: #4CAF50; }
@@ -207,176 +55,50 @@
   .btn-watch-next { background: #FF9800; }
   .btn-watch-next:hover { background: #F57C00; }
   .btn-small { padding: 6px 12px; font-size: 0.9em; }
-  .filters {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    padding: 10px 20px;
-    border: 2px solid #ddd;
-    background: white;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.2s;
-  }
+  .filters { margin: 20px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .filter-btn { padding: 10px 20px; border: 2px solid #ddd; background: white; cursor: pointer; border-radius: 5px; transition: all 0.2s; }
   .filter-btn:hover { border-color: #4CAF50; }
   .filter-btn.active { background: #4CAF50; color: white; border-color: #4CAF50; }
-  .message {
-    padding: 15px;
-    border-radius: 5px;
-    margin: 15px 0;
-    animation: slideIn 0.3s;
-  }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  .message { padding: 15px; border-radius: 5px; margin: 15px 0; animation: slideIn 0.3s; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
   .message.error { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
   .message.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
-  .stats {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    margin: 20px 0;
-    flex-wrap: wrap;
-  }
-  .stat-box {
-    padding: 15px 25px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    text-align: center;
-  }
+  .stats { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+  .stat-box { padding: 15px 25px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
   .stat-number { font-size: 2em; font-weight: bold; color: #2196F3; }
   .stat-label { color: #666; font-size: 0.9em; }
   #movieSearch { width: 100% !important; box-sizing: border-box; }
   #searchInput { box-sizing: border-box; }
-
-  /* Search mode toggle */
-  .search-toggle {
-    display: flex;
-    background: #f0f0f0;
-    border-radius: 6px;
-    padding: 3px;
-    gap: 3px;
-    margin-bottom: 10px;
-    width: fit-content;
-  }
-  .search-toggle-btn {
-    padding: 6px 14px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    font-weight: 500;
-    border: none;
-    background: transparent;
-    color: #666;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .search-toggle-btn.active {
-    background: white;
-    color: #333;
-    box-shadow: 0 1px 3px rgba(0,0,0,.12);
-  }
-  .actor-results-header {
-    padding: 8px 12px;
-    font-size: 0.8em;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    border-bottom: 1px solid #eee;
-    background: #fafafa;
-  }
-  .search-result-item .search-result-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 99px;
-    background: #e8f5e9;
-    color: #2e7d32;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  /* PWA install banner */
-  .install-banner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #1a1a2e;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    animation: slideIn 0.3s;
-  }
+  .search-toggle { display: flex; background: #f0f0f0; border-radius: 6px; padding: 3px; gap: 3px; margin-bottom: 10px; width: fit-content; }
+  .search-toggle-btn { padding: 6px 14px; border-radius: 4px; font-size: 0.85em; font-weight: 500; border: none; background: transparent; color: #666; cursor: pointer; transition: all .15s; }
+  .search-toggle-btn.active { background: white; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .install-banner { display: flex; align-items: center; gap: 12px; background: #1a1a2e; color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; animation: slideIn 0.3s; }
   .install-banner p { flex: 1; margin: 0; font-size: 13px; line-height: 1.4; }
   .install-banner strong { display: block; margin-bottom: 2px; font-size: 14px; }
-  .install-btn {
-    padding: 8px 14px;
-    background: white;
-    color: #1a1a2e;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .install-close {
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.6);
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-  }
+  .install-btn { padding: 8px 14px; background: white; color: #1a1a2e; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .install-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 18px; cursor: pointer; padding: 0; line-height: 1; }
 </style>
-
+ 
 <div class="watchlist-container">
   <div id="install-area"></div>
-
   <div class="header">
     <h1>🎬 Movie Watchlist</h1>
     <p>Tracking the movies we want to watch and rating the ones we've seen!</p>
   </div>
-
   <div id="message"></div>
-
   <div class="stats">
-    <div class="stat-box">
-      <div class="stat-number" id="totalCount">0</div>
-      <div class="stat-label">Total Movies</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-number" id="watchedCount">0</div>
-      <div class="stat-label">Watched</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-number" id="toWatchCount">0</div>
-      <div class="stat-label">To Watch</div>
-    </div>
+    <div class="stat-box"><div class="stat-number" id="totalCount">0</div><div class="stat-label">Total Movies</div></div>
+    <div class="stat-box"><div class="stat-number" id="watchedCount">0</div><div class="stat-label">Watched</div></div>
+    <div class="stat-box"><div class="stat-number" id="toWatchCount">0</div><div class="stat-label">To Watch</div></div>
   </div>
-
   <div class="search-box">
-    <input
-      type="text"
-      id="searchInput"
-      class="search-input"
-      placeholder="🔍 Search your watchlist by title, director, actor, or genre..."
-      onkeyup="searchMovies()"
-    />
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search your watchlist by title, director, actor, or genre..." onkeyup="searchMovies()"/>
   </div>
-
   <div class="filters">
     <button class="filter-btn active" onclick="filterMovies('all')">📋 All Movies</button>
     <button class="filter-btn" onclick="filterMovies('to-watch')">⏳ To Watch</button>
     <button class="filter-btn" onclick="filterMovies('watched')">✅ Watched</button>
   </div>
-
   <div class="add-form">
     <h3>➕ Add New Movie</h3>
     <div class="search-container">
@@ -384,31 +106,23 @@
         <button class="search-toggle-btn active" id="btn-by-title" onclick="setSearchMode('title')">🎬 By title</button>
         <button class="search-toggle-btn" id="btn-by-actor" onclick="setSearchMode('actor')">🎭 By actor / director</button>
       </div>
-      <input
-        type="text"
-        id="movieSearch"
-        placeholder="🔍 Search for a movie to auto-fill details..."
-        onkeyup="searchOMDb()"
-      />
-      <div id="searchResults" class="search-results" style="display: none;"></div>
+      <input type="text" id="movieSearch" placeholder="🔍 Search for a movie to auto-fill details..." onkeyup="searchOMDb()"/>
+      <div id="searchResults" class="search-results" style="display:none;"></div>
     </div>
     <div class="form-row">
-      <input type="text" id="movieTitle" placeholder="Movie title *" />
-      <input type="number" id="movieYear" placeholder="Year *" min="1900" max="2030" />
-      <input type="text" id="movieGenre" placeholder="Genre (e.g., Drama, Comedy)" />
+      <input type="text" id="movieTitle" placeholder="Movie title *"/>
+      <input type="number" id="movieYear" placeholder="Year *" min="1900" max="2030"/>
+      <input type="text" id="movieGenre" placeholder="Genre (e.g., Drama, Comedy)"/>
     </div>
     <div class="form-row">
-      <input type="text" id="movieDirector" placeholder="Director (optional)" />
-      <input type="text" id="movieActors" placeholder="Actors (optional)" />
+      <input type="text" id="movieDirector" placeholder="Director (optional)"/>
+      <input type="text" id="movieActors" placeholder="Actors (optional)"/>
     </div>
     <button class="btn btn-success" onclick="addMovie()">Add to Watchlist</button>
   </div>
-
-  <div id="movieGrid">
-    <div class="loading">📽️ Loading movies...</div>
-  </div>
+  <div id="movieGrid"><div class="loading">📽️ Loading movies...</div></div>
 </div>
-
+ 
 <script>
 // ============================================
 // CONFIGURATION
@@ -417,91 +131,59 @@ const SUPABASE_URL = 'https://yririhzvgwaywnaufebz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyaXJpaHp2Z3dheXduYXVmZWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzcxNTUsImV4cCI6MjA5NDM1MzE1NX0.gLPRT8z8yBMVtJqYh-d4UNRdAVkuiSHiGsmntgeTogM';
 const TABLE = 'movies';
 const OMDB_API_KEY = '92337e1c';
-
-// Supabase REST helper
+ 
 const SB_HEADERS = {
   'apikey': SUPABASE_KEY,
   'Authorization': `Bearer ${SUPABASE_KEY}`,
   'Content-Type': 'application/json',
   'Prefer': 'return=representation'
 };
+ 
 async function sbFetch(method, path, body) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     method,
     headers: SB_HEADERS,
     body: body ? JSON.stringify(body) : undefined
   });
+  console.log(`sbFetch ${method} ${path} -> ${res.status}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    console.error('Supabase error:', err);
     throw new Error(err.message || err.hint || `HTTP ${res.status}`);
   }
   return res.status === 204 ? null : res.json();
 }
-
-let movies = [];
-let allMovies = [];
-let currentFilter = 'all';
-let searchTimeout;
-let deferredPrompt = null;
-
+ 
+let movies = [], allMovies = [], currentFilter = 'all', searchTimeout, deferredPrompt = null, searchMode = 'title';
+ 
 // ============================================
 // PWA SETUP
 // ============================================
 const manifest = {
-  name: 'Movie Watchlist',
-  short_name: 'Movies',
+  name: 'Movie Watchlist', short_name: 'Movies',
   description: 'Track movies to watch and rate the ones you have seen',
-  start_url: '/movies.html',
-  display: 'standalone',
-  background_color: '#ffffff',
-  theme_color: '#1a1a2e',
-  orientation: 'portrait',
+  start_url: '/movies.html', display: 'standalone',
+  background_color: '#ffffff', theme_color: '#1a1a2e', orientation: 'portrait',
   icons: [
-    {
-      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E",
-      sizes: '192x192',
-      type: 'image/svg+xml'
-    },
-    {
-      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%231a1a2e'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E",
-      sizes: '512x512',
-      type: 'image/svg+xml'
-    }
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%231a1a2e'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
   ]
 };
-const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
-
-// Android/Chrome install prompt
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  showInstallBanner('pwa');
-});
-
-// iOS install hint
+document.getElementById('pwa-manifest').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+ 
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('pwa'); });
 const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-if (isIos && !isStandalone) {
-  setTimeout(() => showInstallBanner('ios'), 2000);
-}
-
+if (isIos && !isStandalone) setTimeout(() => showInstallBanner('ios'), 2000);
+ 
 function showInstallBanner(type) {
   const area = document.getElementById('install-area');
   if (type === 'pwa') {
-    area.innerHTML = `<div class="install-banner">
-      <p><strong>Add to home screen</strong>Install for quick access anytime</p>
-      <button class="install-btn" onclick="triggerInstall()">Install</button>
-      <button class="install-close" onclick="this.closest('.install-banner').remove()">×</button>
-    </div>`;
+    area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong>Install for quick access anytime</p><button class="install-btn" onclick="triggerInstall()">Install</button><button class="install-close" onclick="this.closest('.install-banner').remove()">x</button></div>`;
   } else {
-    area.innerHTML = `<div class="install-banner">
-      <p><strong>Add to home screen</strong>Tap the share icon then "Add to Home Screen"</p>
-      <button class="install-close" onclick="this.closest('.install-banner').remove()">×</button>
-    </div>`;
+    area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong>Tap the share icon then "Add to Home Screen"</p><button class="install-close" onclick="this.closest('.install-banner').remove()">x</button></div>`;
   }
 }
-
 async function triggerInstall() {
   if (!deferredPrompt) return;
   deferredPrompt.prompt();
@@ -509,150 +191,93 @@ async function triggerInstall() {
   deferredPrompt = null;
   document.getElementById('install-area').innerHTML = '';
 }
-
+ 
 // ============================================
-// OMDB API AUTO-FILL
+// OMDB SEARCH
 // ============================================
-let searchMode = 'title'; // 'title' or 'actor'
-
 function setSearchMode(mode) {
   searchMode = mode;
   document.getElementById('btn-by-title').classList.toggle('active', mode === 'title');
   document.getElementById('btn-by-actor').classList.toggle('active', mode === 'actor');
-  document.getElementById('movieSearch').placeholder =
-    mode === 'title'
-      ? '🔍 Search for a movie to auto-fill details...'
-      : '🎭 Search by actor or director name (e.g. Kevin Bacon)...';
+  document.getElementById('movieSearch').placeholder = mode === 'title'
+    ? 'Search for a movie to auto-fill details...'
+    : 'Search by actor or director name (e.g. Kevin Bacon)...';
   document.getElementById('movieSearch').value = '';
   document.getElementById('searchResults').style.display = 'none';
 }
-
+ 
 function searchOMDb() {
   const query = document.getElementById('movieSearch').value.trim();
-  if (query.length < 3) {
-    document.getElementById('searchResults').style.display = 'none';
-    return;
-  }
+  if (query.length < 3) { document.getElementById('searchResults').style.display = 'none'; return; }
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(async () => {
-    if (searchMode === 'actor') {
-      await searchByPerson(query);
-    } else {
-      await searchByTitle(query);
-    }
+    if (searchMode === 'actor') await searchByPerson(query);
+    else await searchByTitle(query);
   }, 300);
 }
-
+ 
 async function searchByTitle(query) {
   try {
-    const response = await fetch(
-      `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie`
-    );
+    const response = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie`);
     const data = await response.json();
     if (data.Response === 'True') {
       displaySearchResults(data.Search, 'title');
     } else {
-      document.getElementById('searchResults').innerHTML =
-        '<div style="padding: 15px; color: #666;">No movies found. Try a different search.</div>';
+      document.getElementById('searchResults').innerHTML = '<div style="padding:15px;color:#666;">No movies found. Try a different search.</div>';
       document.getElementById('searchResults').style.display = 'block';
     }
-  } catch (error) {
-    console.error('OMDb search error:', error);
-  }
+  } catch (error) { console.error('OMDb search error:', error); }
 }
-
+ 
 async function searchByPerson(query) {
   const container = document.getElementById('searchResults');
   container.innerHTML = '<div style="padding:12px;color:#666;font-size:0.9em">Searching...</div>';
   container.style.display = 'block';
-
-  // OMDB doesn't have a dedicated person search endpoint, so we search movies
-  // and then fetch each result to check if the person appears in the cast/crew
   try {
-    // Search with person name as query — OMDB will return some matches
-    // We also fetch multiple pages to get more candidates
     const [res1, res2] = await Promise.all([
       fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie&page=1`),
       fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}&type=movie&page=2`),
     ]);
     const [d1, d2] = await Promise.all([res1.json(), res2.json()]);
-
-    const candidates = [
-      ...(d1.Response === 'True' ? d1.Search : []),
-      ...(d2.Response === 'True' ? d2.Search : []),
-    ];
-
-    if (!candidates.length) {
-      container.innerHTML = '<div style="padding:15px;color:#666;">No results found. Try a full name (e.g. "Kevin Bacon").</div>';
-      return;
-    }
-
-    // Fetch full details for each candidate to check cast/crew
+    const candidates = [...(d1.Response === 'True' ? d1.Search : []), ...(d2.Response === 'True' ? d2.Search : [])];
+    if (!candidates.length) { container.innerHTML = '<div style="padding:15px;color:#666;">No results found. Try a full name.</div>'; return; }
     container.innerHTML = '<div class="actor-results-header">Checking cast & crew...</div>';
-    const details = await Promise.all(
-      candidates.slice(0, 10).map(m =>
-        fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${m.imdbID}`)
-          .then(r => r.json())
-          .catch(() => null)
-      )
-    );
-
+    const details = await Promise.all(candidates.slice(0, 10).map(m =>
+      fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${m.imdbID}`).then(r => r.json()).catch(() => null)
+    ));
     const queryLower = query.toLowerCase();
     const matches = details
       .filter(m => m && m.Response === 'True')
-      .filter(m =>
-        (m.Actors  || '').toLowerCase().includes(queryLower) ||
-        (m.Director|| '').toLowerCase().includes(queryLower) ||
-        (m.Writer  || '').toLowerCase().includes(queryLower)
-      );
-
-    if (!matches.length) {
-      container.innerHTML = `<div style="padding:15px;color:#666;">No movies found featuring "<strong>${query}</strong>". Try their full name.</div>`;
-      return;
-    }
-
-    displaySearchResults(matches.map(m => ({
-      imdbID: m.imdbID,
-      Title:  m.Title,
-      Year:   m.Year,
-      Poster: m.Poster,
-      // Show what role the person played
-      role: (m.Director||'').toLowerCase().includes(queryLower) ? 'Director'
-          : (m.Writer  ||'').toLowerCase().includes(queryLower) ? 'Writer'
-          : 'Actor',
-    })), 'actor', query);
-
+      .filter(m => (m.Actors||'').toLowerCase().includes(queryLower) || (m.Director||'').toLowerCase().includes(queryLower) || (m.Writer||'').toLowerCase().includes(queryLower))
+      .map(m => ({
+        imdbID: m.imdbID, Title: m.Title, Year: m.Year, Poster: m.Poster,
+        role: (m.Director||'').toLowerCase().includes(queryLower) ? 'Director' : (m.Writer||'').toLowerCase().includes(queryLower) ? 'Writer' : 'Actor'
+      }));
+    if (!matches.length) { container.innerHTML = `<div style="padding:15px;color:#666;">No movies found featuring <strong>${query}</strong>.</div>`; return; }
+    displaySearchResults(matches, 'actor', query);
   } catch (error) {
     container.innerHTML = '<div style="padding:15px;color:#c62828;">Search failed. Please try again.</div>';
-    console.error('Actor search error:', error);
   }
 }
-
+ 
 function displaySearchResults(results, mode, personQuery) {
   const container = document.getElementById('searchResults');
   const header = mode === 'actor' && personQuery
-    ? `<div class="actor-results-header">${results.length} film${results.length !== 1 ? 's' : ''} featuring "${personQuery}"</div>`
-    : '';
+    ? `<div class="actor-results-header">${results.length} film${results.length !== 1 ? 's' : ''} featuring "${personQuery}"</div>` : '';
   container.innerHTML = header + results.slice(0, 8).map(movie => `
     <div class="search-result-item" onclick="selectMovie('${movie.imdbID}')">
       <img src="${movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/40x60?text=No+Image'}" alt="${movie.Title}">
       <div class="search-result-info">
         <div class="search-result-title">${movie.Title}</div>
-        <div class="search-result-meta" style="display:flex;align-items:center;gap:6px">
-          ${movie.Year}
-          ${movie.role ? `<span class="search-result-badge">${movie.role}</span>` : ''}
-        </div>
+        <div class="search-result-meta">${movie.Year}${movie.role ? `<span class="search-result-badge">${movie.role}</span>` : ''}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
   container.style.display = 'block';
 }
-
+ 
 async function selectMovie(imdbID) {
   try {
-    const response = await fetch(
-      `https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbID}&plot=short`
-    );
+    const response = await fetch(`https://www.omdbapi.com/?apikey=${OMDB_API_KEY}&i=${imdbID}&plot=short`);
     const movie = await response.json();
     if (movie.Response === 'True') {
       document.getElementById('movieTitle').value = movie.Title;
@@ -662,55 +287,46 @@ async function selectMovie(imdbID) {
       document.getElementById('movieActors').value = movie.Actors;
       document.getElementById('movieSearch').value = '';
       document.getElementById('searchResults').style.display = 'none';
-      showMessage(`Auto-filled details for "${movie.Title}"! ✨`, 'success');
+      showMessage(`Auto-filled details for "${movie.Title}"!`, 'success');
     }
-  } catch (error) {
-    console.error('Error fetching movie details:', error);
-    showMessage('Error fetching movie details', 'error');
-  }
+  } catch (error) { showMessage('Error fetching movie details', 'error'); }
 }
-
+ 
 document.addEventListener('click', function(event) {
-  if (!event.target.closest('.search-container')) {
-    document.getElementById('searchResults').style.display = 'none';
-  }
+  if (!event.target.closest('.search-container')) document.getElementById('searchResults').style.display = 'none';
 });
-
+ 
 // ============================================
-// SEARCH FUNCTIONALITY
+// WATCHLIST SEARCH
 // ============================================
 function searchMovies() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
-  if (query === '') {
-    movies = [...allMovies];
-  } else {
-    movies = allMovies.filter(movie =>
-      movie.title.toLowerCase().includes(query) ||
-      movie.genre.toLowerCase().includes(query) ||
-      movie.director.toLowerCase().includes(query) ||
-      movie.actors.toLowerCase().includes(query)
-    );
-  }
+  movies = query === '' ? [...allMovies] : allMovies.filter(movie =>
+    movie.title.toLowerCase().includes(query) ||
+    movie.genre.toLowerCase().includes(query) ||
+    movie.director.toLowerCase().includes(query) ||
+    movie.actors.toLowerCase().includes(query)
+  );
   renderMovies();
 }
-
+ 
 // ============================================
-SUPABASE API FUNCTIONS
+// SUPABASE API FUNCTIONS
 // ============================================
 async function loadMovies() {
   try {
     const data = await sbFetch('GET', `${TABLE}?order=date_added.desc`);
     allMovies = data.map(r => ({
       id:        r.id,
-      title:     r.title     || 'Untitled',
-      year:      r.year      || 0,
-      genre:     r.genre     || 'Unknown',
-      director:  r.director  || '',
-      actors:    r.actors    || '',
-      watched:   r.watched   || false,
-      rating:    r.rating    || 0,
-      dateAdded: r.date_added|| '',
-      watchNext: r.watch_next|| false
+      title:     r.title      || 'Untitled',
+      year:      r.year       || 0,
+      genre:     r.genre      || 'Unknown',
+      director:  r.director   || '',
+      actors:    r.actors     || '',
+      watched:   r.watched    || false,
+      rating:    r.rating     || 0,
+      dateAdded: r.date_added || '',
+      watchNext: r.watch_next || false
     }));
     movies = [...allMovies];
     updateStats();
@@ -719,10 +335,10 @@ async function loadMovies() {
     console.error('Error loading movies:', error);
     document.getElementById('movieGrid').innerHTML =
       `<div class="message error"><strong>Error loading movies:</strong> ${error.message}<br>
-      <small>Check your Supabase URL, key, and that RLS is disabled on the movies table.</small></div>`;
+      <small>Open DevTools console for details.</small></div>`;
   }
 }
-
+ 
 async function addMovie() {
   const title    = document.getElementById('movieTitle').value.trim();
   const year     = parseInt(document.getElementById('movieYear').value);
@@ -738,51 +354,33 @@ async function addMovie() {
       date_added: new Date().toISOString().split('T')[0],
       watch_next: false
     });
-    document.getElementById('movieTitle').value = '';
-    document.getElementById('movieYear').value = '';
-    document.getElementById('movieGenre').value = '';
-    document.getElementById('movieDirector').value = '';
-    document.getElementById('movieActors').value = '';
-    document.getElementById('movieSearch').value = '';
-    showMessage(`"${title}" added to your watchlist! 🎉`, 'success');
+    ['movieTitle','movieYear','movieGenre','movieDirector','movieActors','movieSearch'].forEach(id => document.getElementById(id).value = '');
+    showMessage(`"${title}" added to your watchlist!`, 'success');
     await loadMovies();
-  } catch (error) {
-    console.error('Error adding movie:', error);
-    showMessage('Error adding movie: ' + error.message, 'error');
-  }
+  } catch (error) { showMessage('Error adding movie: ' + error.message, 'error'); }
 }
-
+ 
 async function updateMovie(id, fields) {
   try {
-    // Map fields to snake_case Supabase columns
     const mapped = {};
     if ('Watched'    in fields) mapped.watched    = fields.Watched;
     if ('Rating'     in fields) mapped.rating     = fields.Rating;
     if ('Watch Next' in fields) mapped.watch_next = fields['Watch Next'];
     await sbFetch('PATCH', `${TABLE}?id=eq.${id}`, mapped);
-    showMessage('Updated! ✅', 'success');
+    showMessage('Updated!', 'success');
     await loadMovies();
-  } catch (error) {
-    console.error('Error updating movie:', error);
-    showMessage('Error updating: ' + error.message, 'error');
-  }
+  } catch (error) { showMessage('Error updating: ' + error.message, 'error'); }
 }
-
+ 
 async function deleteMovie(id, title) {
   if (!confirm(`Delete "${title}"? This cannot be undone!`)) return;
   try {
     await sbFetch('DELETE', `${TABLE}?id=eq.${id}`);
-    showMessage(`"${title}" deleted! 🗑️`, 'success');
+    showMessage(`"${title}" deleted!`, 'success');
     await loadMovies();
-  } catch (error) {
-    console.error('Error deleting movie:', error);
-    showMessage('Error deleting: ' + error.message, 'error');
-  }
+  } catch (error) { showMessage('Error deleting: ' + error.message, 'error'); }
 }
-
-// ============================================
-// WATCH NEXT FUNCTION
-// ============================================
+ 
 async function toggleWatchNext(id, makeWatchNext) {
   if (makeWatchNext) {
     const currentWatchNext = movies.filter(m => m.watchNext);
@@ -792,18 +390,17 @@ async function toggleWatchNext(id, makeWatchNext) {
   }
   await updateMovie(id, { 'Watch Next': makeWatchNext });
 }
-
+ 
 // ============================================
 // UI FUNCTIONS
 // ============================================
 function updateStats() {
-  const total = allMovies.length;
-  const watched = allMovies.filter(m => m.watched).length;
+  const total = allMovies.length, watched = allMovies.filter(m => m.watched).length;
   document.getElementById('totalCount').textContent = total;
   document.getElementById('watchedCount').textContent = watched;
   document.getElementById('toWatchCount').textContent = total - watched;
 }
-
+ 
 function renderMovies() {
   const grid = document.getElementById('movieGrid');
   const filtered = movies.filter(m => {
@@ -812,10 +409,9 @@ function renderMovies() {
     if (currentFilter === 'to-watch') return !m.watched;
   });
   if (filtered.length === 0) {
-    const searchQuery = document.getElementById('searchInput').value;
-    grid.innerHTML = searchQuery
-      ? '<div class="loading">No movies match your search. Try different keywords! 🔍</div>'
-      : '<div class="loading">No movies found. Add one above! 🎬</div>';
+    grid.innerHTML = document.getElementById('searchInput').value
+      ? '<div class="loading">No movies match your search. Try different keywords!</div>'
+      : '<div class="loading">No movies found. Add one above!</div>';
     return;
   }
   const sorted = filtered.sort((a, b) => {
@@ -825,73 +421,59 @@ function renderMovies() {
   });
   grid.innerHTML = sorted.map(movie => {
     const stars = '⭐'.repeat(movie.rating);
-    return `
-      <div class="movie-card ${movie.watched ? 'watched' : ''} ${movie.watchNext ? 'watch-next' : ''}">
-        ${movie.watchNext ? '<div class="watch-next-banner">🔥 WATCH NEXT</div>' : ''}
-        <h3>${movie.title}</h3>
-        <p class="movie-meta">📅 ${movie.year} | 🎭 ${movie.genre}</p>
-        ${movie.director ? `<p class="movie-details"><strong>Director:</strong> ${movie.director}</p>` : ''}
-        ${movie.actors ? `<p class="movie-details"><strong>Cast:</strong> ${movie.actors}</p>` : ''}
-        ${movie.watched && movie.rating > 0 ? `<div class="movie-rating">${stars}</div>` : ''}
-        <div class="movie-actions">
-          ${!movie.watched ? `
-            <button class="btn btn-small btn-watch-next" onclick="toggleWatchNext('${movie.id}', ${!movie.watchNext})">
-              ${movie.watchNext ? '❌ Remove' : '🔥 Watch Next'}
-            </button>` : ''}
-          <button class="btn btn-small ${movie.watched ? '' : 'btn-success'}"
-                  onclick="toggleWatched('${movie.id}', ${!movie.watched})">
-            ${movie.watched ? '↩️ Mark Unwatched' : '✅ Mark Watched'}
-          </button>
-          ${movie.watched ? `
-            <select onchange="setRating('${movie.id}', this.value)"
-                    style="padding:8px; border-radius:4px; border:1px solid #ddd;">
-              <option value="0" ${movie.rating===0?'selected':''}>⭐ Rate movie</option>
-              <option value="1" ${movie.rating===1?'selected':''}>⭐</option>
-              <option value="2" ${movie.rating===2?'selected':''}>⭐⭐</option>
-              <option value="3" ${movie.rating===3?'selected':''}>⭐⭐⭐</option>
-              <option value="4" ${movie.rating===4?'selected':''}>⭐⭐⭐⭐</option>
-              <option value="5" ${movie.rating===5?'selected':''}>⭐⭐⭐⭐⭐</option>
-            </select>` : ''}
-          <button class="btn btn-danger btn-small"
-                  onclick="deleteMovie('${movie.id}', '${movie.title.replace(/'/g, "\\'")}')"
-                  style="margin-left:auto;">
-            🗑️ Delete
-          </button>
-        </div>
-      </div>`;
+    return `<div class="movie-card ${movie.watched ? 'watched' : ''} ${movie.watchNext ? 'watch-next' : ''}">
+      ${movie.watchNext ? '<div class="watch-next-banner">WATCH NEXT</div>' : ''}
+      <h3>${movie.title}</h3>
+      <p class="movie-meta">📅 ${movie.year} | 🎭 ${movie.genre}</p>
+      ${movie.director ? `<p class="movie-details"><strong>Director:</strong> ${movie.director}</p>` : ''}
+      ${movie.actors   ? `<p class="movie-details"><strong>Cast:</strong> ${movie.actors}</p>` : ''}
+      ${movie.watched && movie.rating > 0 ? `<div class="movie-rating">${stars}</div>` : ''}
+      <div class="movie-actions">
+        ${!movie.watched ? `<button class="btn btn-small btn-watch-next" onclick="toggleWatchNext('${movie.id}', ${!movie.watchNext})">${movie.watchNext ? 'Remove' : 'Watch Next'}</button>` : ''}
+        <button class="btn btn-small ${movie.watched ? '' : 'btn-success'}" onclick="toggleWatched('${movie.id}', ${!movie.watched})">${movie.watched ? 'Mark Unwatched' : 'Mark Watched'}</button>
+        ${movie.watched ? `<select onchange="setRating('${movie.id}', this.value)" style="padding:8px;border-radius:4px;border:1px solid #ddd;">
+          <option value="0" ${movie.rating===0?'selected':''}>Rate movie</option>
+          <option value="1" ${movie.rating===1?'selected':''}>1 star</option>
+          <option value="2" ${movie.rating===2?'selected':''}>2 stars</option>
+          <option value="3" ${movie.rating===3?'selected':''}>3 stars</option>
+          <option value="4" ${movie.rating===4?'selected':''}>4 stars</option>
+          <option value="5" ${movie.rating===5?'selected':''}>5 stars</option>
+        </select>` : ''}
+        <button class="btn btn-danger btn-small" onclick="deleteMovie('${movie.id}', '${movie.title.replace(/'/g, "\\'")}')">Delete</button>
+      </div>
+    </div>`;
   }).join('');
 }
-
+ 
 async function toggleWatched(id, watched) {
   const fields = { Watched: watched };
   if (!watched) fields.Rating = 0;
   if (watched) fields['Watch Next'] = false;
   await updateMovie(id, fields);
 }
-
-async function setRating(id, rating) {
-  await updateMovie(id, { Rating: parseInt(rating) });
-}
-
+ 
+async function setRating(id, rating) { await updateMovie(id, { Rating: parseInt(rating) }); }
+ 
 function filterMovies(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
   renderMovies();
 }
-
+ 
 function showMessage(text, type) {
   const msgDiv = document.getElementById('message');
   msgDiv.className = `message ${type}`;
   msgDiv.textContent = text;
   setTimeout(() => { msgDiv.className = ''; msgDiv.textContent = ''; }, 4000);
 }
-
+ 
 // ============================================
-// INITIALIZATION
+// INIT
 // ============================================
 loadMovies();
 setInterval(loadMovies, 30000);
 </script>
 </body>
 </html>
+ 
