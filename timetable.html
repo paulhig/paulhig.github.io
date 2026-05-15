@@ -8,90 +8,68 @@
 <meta name="apple-mobile-web-app-title" content="Timetable">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f0f0f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://yririhzvgwaywnaufebz.supabase.co https://www.omdbapi.com; img-src 'self' data: https: http:; font-src 'self' data:;">
 <title>Timetable</title>
 <link rel="manifest" id="manifest-link">
 <style>
   :root {
-    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424;
-    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
-    --text: #f0ede8; --text2: #888580; --text3: #555250;
-    --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --radius: 14px; --radius-sm: 9px;
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --text2: #888580;
+    --text3: #555250;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --radius: 14px;
+    --radius-sm: 9px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'SF Pro Display', -apple-system, 'Helvetica Neue', sans-serif; overscroll-behavior: none; }
-  .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
-
+  .app { display: flex; flex-direction: column; height: 100%; width: 100%; }
   .header { padding: calc(var(--safe-top) + 16px) 20px 0; flex-shrink: 0; }
   .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
   .header-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
   .header-date { font-size: 13px; color: var(--text2); margin-top: 1px; }
-  .header-actions { display: flex; align-items: center; gap: 10px; }
-
-  .lang-btn { height: 32px; padding: 0 10px; border-radius: 99px; background: var(--surface2); border: 0.5px solid var(--border); color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; letter-spacing: .04em; }
-  .lang-btn:active { background: var(--surface); }
-
   .add-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: 22px; font-weight: 300; line-height: 1; transition: transform .15s, opacity .15s; flex-shrink: 0; }
   .add-btn:active { transform: scale(0.92); opacity: 0.8; }
-
   .day-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .day-scroll::-webkit-scrollbar { display: none; }
   .day-pill { flex-shrink: 0; padding: 7px 14px; border-radius: 99px; font-size: 13px; font-weight: 500; background: var(--surface); color: var(--text2); border: 0.5px solid var(--border); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; white-space: nowrap; -webkit-user-select: none; user-select: none; }
   .day-pill.active { background: var(--text); color: var(--bg); border-color: transparent; font-weight: 600; }
   .day-pill .cnt { font-size: 10px; font-weight: 600; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.15); }
-
   .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px calc(var(--safe-bottom) + 24px); scrollbar-width: none; }
   .content::-webkit-scrollbar { display: none; }
   .events-list { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
-
   .event-card { display: flex; align-items: stretch; background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; transition: transform .12s; }
   .event-card:active { transform: scale(0.98); }
-  .event-card.drag-over { border-color: var(--text2); background: var(--surface2); }
-  .event-card.is-cancelled { opacity: 0.5; }
-  .event-card.is-cancelled .event-stripe { opacity: 0.35; }
-  .event-card.is-cancelled .event-name { text-decoration: line-through; color: var(--text3); }
-  .event-card.is-cancelled .event-time { color: var(--text3); }
-
+  .event-card.is-cancelled { opacity: 0.55; }
+  .event-card.is-cancelled .event-name { text-decoration: line-through; text-decoration-color: var(--text3); }
+  .event-card.is-cancelled .event-time { text-decoration: line-through; text-decoration-color: var(--text3); }
+  .cancelled-badge { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: var(--surface2); border: 0.5px solid var(--border2); color: var(--text3); vertical-align: middle; text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase; }
   .drag-handle { display: flex; align-items: center; justify-content: center; padding: 0 10px 0 12px; color: var(--text3); cursor: grab; flex-shrink: 0; touch-action: none; }
   .drag-handle:active { cursor: grabbing; }
+  .event-card.drag-over { border-color: var(--text2); background: var(--surface2); }
   .event-stripe { width: 4px; flex-shrink: 0; }
-  .event-main { flex: 1; padding: 12px 14px; min-width: 0; }
-  .event-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+  .event-main { flex: 1; padding: 12px 14px; min-width: 0; cursor: pointer; }
+  .event-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .event-time { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
   .event-loc { font-size: 11px; color: var(--text3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
-  .cancelled-badge { flex-shrink: 0; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 99px; background: var(--surface2); color: var(--text3); text-decoration: none; letter-spacing: .03em; }
-  .cancel-btn { padding: 0 8px; background: none; border: none; color: var(--text3); cursor: pointer; display: flex; align-items: center; transition: color .15s; flex-shrink: 0; }
-  .cancel-btn:active { color: var(--text2); }
-  .event-del { padding: 0 14px; background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; display: flex; align-items: center; transition: color .15s; flex-shrink: 0; }
+  .event-del { padding: 0 16px; background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; display: flex; align-items: center; transition: color .15s; flex-shrink: 0; }
   .event-del:active { color: #e05555; }
-
   .empty-state { padding: 60px 20px; text-align: center; color: var(--text3); font-size: 14px; line-height: 1.6; }
   .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.2; }
-  .status-bar { text-align: center; font-size: 11px; color: var(--text3); padding: 6px 16px 0; flex-shrink: 0; min-height: 22px; }
-  .sync-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--text3); display: inline-block;
-    margin-left: 8px; vertical-align: middle;
-    transition: background .3s;
-  }
-  .sync-dot.syncing {
-    background: #EF9F27;
-    animation: pulse .9s ease-in-out infinite;
-  }
-  .sync-dot.ok { background: #1D9E75; animation: none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
+  .status-bar { text-align: center; font-size: 11px; color: var(--text3); padding: 6px 16px 0; flex-shrink: 0; min-height: 22px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); display: inline-block; animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; justify-content: center; }
   .modal-overlay.show { display: flex; }
   .modal-sheet { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 480px; padding: 0 20px calc(var(--safe-bottom) + 28px); border-top: 0.5px solid var(--border2); animation: slideUp .28s cubic-bezier(0.32,0.72,0,1); }
-  @keyframes pulse {
-    0%,100% { opacity: 0.4; }
-    50%      { opacity: 1; }
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
   .sheet-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 20px; }
   .sheet-title { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
-
   .field-group { margin-bottom: 14px; }
   .field-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: block; }
   .field-input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 15px; padding: 11px 13px; font-family: inherit; outline: none; -webkit-appearance: none; appearance: none; transition: border-color .15s; }
@@ -100,44 +78,19 @@
   select.field-input { cursor: pointer; }
   option { background: #1a1a1a; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
   .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
   .color-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .12s, border-color .12s; }
   .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
-
   .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
   .btn-cancel { flex: 1; padding: 14px; border-radius: var(--radius-sm); background: var(--surface2); border: 0.5px solid var(--border); color: var(--text2); font-size: 15px; font-family: inherit; cursor: pointer; }
   .btn-save { flex: 2; padding: 14px; border-radius: var(--radius-sm); background: var(--text); border: none; color: var(--bg); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: opacity .15s; }
   .btn-save:disabled { opacity: 0.4; }
-
-  .is-cancelled { opacity: 0.55; }
-  .is-cancelled .event-name { text-decoration: line-through; text-decoration-color: var(--text3); }
-  .is-cancelled .event-time { text-decoration: line-through; text-decoration-color: var(--text3); }
-  .cancelled-badge {
-    display: inline-block; margin-left: 8px;
-    font-size: 10px; font-weight: 600; padding: 2px 6px;
-    border-radius: 4px; background: var(--surface2);
-    border: 0.5px solid var(--border2);
-    color: var(--text3); vertical-align: middle;
-    text-decoration: none;
-    letter-spacing: 0.04em; text-transform: uppercase;
-  }
-  .event-main { cursor: pointer; }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .syncing { animation: pulse 1s ease-in-out infinite; background: #EF9F27 !important; }
-  .sync-ok  { background: #1D9E75 !important; }
-  .sync-err { background: #E24B4A !important; }
-
-  .install-banner { margin: 0 16px 10px; padding: 12px 14px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; animation: fadeIn .3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .install-banner { margin: 0 16px 10px; padding: 12px 14px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; }
   .install-banner p { font-size: 12px; color: var(--text2); flex: 1; line-height: 1.4; }
   .install-banner p strong { color: var(--text); font-weight: 600; }
   .install-btn { padding: 7px 12px; background: var(--text); color: var(--bg); border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
   .install-close { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 0 0 0 4px; line-height: 1; }
-
   @media (min-width: 481px) {
-    .app { border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
     .modal-sheet { border-radius: 24px; margin-bottom: 40px; }
     .modal-overlay { align-items: center; }
   }
@@ -153,22 +106,16 @@
   <div class="header">
     <div class="header-top">
       <div>
-        <div class="header-title" id="header-title">Timetable</div>
+        <div class="header-title">Timetable</div>
         <div class="header-date" id="header-date"></div>
       </div>
-      <div class="header-actions">
-        <button class="lang-btn" id="lang-btn" onclick="toggleLang()">DE</button>
-        <button class="add-btn" onclick="openAdd()" id="add-btn" aria-label="Add event">+</button>
-      </div>
+      <button class="add-btn" onclick="openAdd()" aria-label="Add event">+</button>
     </div>
     <div class="day-scroll" id="day-tabs"></div>
   </div>
-
   <div id="install-area"></div>
-  <div class="status-bar" id="status">
-    <span id="sync-dot" style="display:none">
-      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text3);vertical-align:middle;margin-right:4px;animation:pulse 1.2s ease-in-out infinite"></span>syncing
-    </span>
+  <div class="status-bar" id="status-bar">
+    <span id="sync-indicator" style="display:none"><span class="sync-dot"></span>syncing</span>
     <span id="status-text"></span>
   </div>
   <div class="content">
@@ -179,490 +126,374 @@
 <div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheet-title">New event</div>
+    <div class="sheet-title">New event</div>
     <div class="field-group">
-      <label class="field-label" id="lbl-name">Event name</label>
-      <input class="field-input" id="f-name" type="text" autocomplete="off">
+      <label class="field-label">Event name</label>
+      <input class="field-input" id="f-name" type="text" placeholder="e.g. Team standup" autocomplete="off">
     </div>
     <div class="field-group">
-      <label class="field-label" id="lbl-day">Day</label>
+      <label class="field-label">Day</label>
       <select class="field-input" id="f-day"></select>
     </div>
     <div class="field-row">
       <div class="field-group">
-        <label class="field-label" id="lbl-start">Start</label>
+        <label class="field-label">Start</label>
         <input class="field-input" id="f-start" type="time">
       </div>
       <div class="field-group">
-        <label class="field-label" id="lbl-end">End</label>
+        <label class="field-label">End</label>
         <input class="field-input" id="f-end" type="time">
       </div>
     </div>
     <div class="field-group">
-      <label class="field-label" id="lbl-loc">Location (optional)</label>
-      <input class="field-input" id="f-loc" type="text" autocomplete="off">
+      <label class="field-label">Location (optional)</label>
+      <input class="field-input" id="f-loc" type="text" placeholder="e.g. Room 3B" autocomplete="off">
     </div>
     <div class="field-group">
-      <label class="field-label" id="lbl-color">Color</label>
+      <label class="field-label">Color</label>
       <div class="color-picker" id="color-picker"></div>
     </div>
     <div class="sheet-actions">
-      <button class="btn-cancel" id="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" id="save-btn" onclick="saveEvent()">Save event</button>
     </div>
   </div>
 </div>
 
 <script>
-  // ── CONFIG ───────────────────────────────────────────────
-  const AIRTABLE_TOKEN = 'patY6NBplXoNFImHj.38510f58830f683b85ece47317e1c9c4c3e7db0e487a6ff356e761641881540f';
-  const BASE_ID    = 'app87ZRy0mgBmMAUS';
-  const TABLE_NAME = 'Schedule';
-  const FIELDS = {
-    name:  'fldHHfDnx5BuJ7hop', day:   'fld1y2dyeqJfWJ7ON',
-    start: 'fldgDPAViGE2l5hc3', end:   'fldyaaYHuT7LqQOLz',
-    loc:   'fld3VGK2vPLA3g1kl', color: 'fldwnsBwBNgPhabsb'
-  };
-  // ────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://yririhzvgwaywnaufebz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlyaXJpaHp2Z3dheXduYXVmZWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzcxNTUsImV4cCI6MjA5NDM1MzE1NX0.gLPRT8z8yBMVtJqYh-d4UNRdAVkuiSHiGsmntgeTogM';
+const TABLE = 'schedule';
 
-  // ── Localisation ─────────────────────────────────────────
-  const I18N = {
-    en: {
-      title:       'Timetable',
-      newEvent:    'New event',
-      labelName:   'Event name',
-      labelDay:    'Day',
-      labelStart:  'Start',
-      labelEnd:    'End',
-      labelLoc:    'Location (optional)',
-      labelColor:  'Color',
-      btnCancel:   'Cancel',
-      btnSave:     'Save event',
-      placeName:   'e.g. Team standup',
-      placeLoc:    'e.g. Room 3B',
-      saving:      'Saving…',
-      loading:     'Loading…',
-      removing:    'Removing…',
-      updating:    'Updating…',
-      noEvents:    d => `No events on ${d}`,
-      tapToAdd:    'Tap + to add one',
-      confirmDel:  'Remove this event?',
-      errRequired: 'Please fill in name, day, start and end time.',
-      errLoad:     'Could not load — check API key',
-      cancelled:   'Cancelled',
-      days:        ['Monday','Tuesday','Wednesday','Thursday','Friday'],
-      dayShort:    ['Mon','Tue','Wed','Thu','Fri'],
-      install1title: 'Add to home screen',
-      install1body:  'Install for quick access',
-      install1btn:   'Install',
-      install2body:  'Tap the share icon then "Add to Home Screen"',
-      eventsCount: n => `${n} event${n !== 1 ? 's' : ''}`,
-    },
-    de: {
-      title:       'Stundenplan',
-      newEvent:    'Neuer Termin',
-      labelName:   'Terminname',
-      labelDay:    'Tag',
-      labelStart:  'Beginn',
-      labelEnd:    'Ende',
-      labelLoc:    'Ort (optional)',
-      labelColor:  'Farbe',
-      btnCancel:   'Abbrechen',
-      btnSave:     'Speichern',
-      placeName:   'z. B. Teambesprechung',
-      placeLoc:    'z. B. Raum 3B',
-      saving:      'Speichern…',
-      loading:     'Laden…',
-      removing:    'Entfernen…',
-      updating:    'Aktualisieren…',
-      noEvents:    d => `Keine Termine am ${d}`,
-      tapToAdd:    '+ antippen um hinzuzufügen',
-      confirmDel:  'Diesen Termin entfernen?',
-      errRequired: 'Bitte Name, Tag, Beginn und Ende ausfüllen.',
-      errLoad:     'Laden fehlgeschlagen — API-Schlüssel prüfen',
-      cancelled:   'Abgesagt',
-      days:        ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'],
-      dayShort:    ['Mo','Di','Mi','Do','Fr'],
-      install1title: 'Zum Startbildschirm',
-      install1body:  'Installieren für schnellen Zugriff',
-      install1btn:   'Installieren',
-      install2body:  'Teilen antippen, dann "Zum Home-Bildschirm"',
-      eventsCount: n => `${n} Termin${n !== 1 ? 'e' : ''}`,
-    }
-  };
+const SB_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
 
-  let lang = localStorage.getItem('lang') || 'en';
-  const t = () => I18N[lang];
+async function sbFetch(method, path, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method,
+    headers: SB_HEADERS,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  console.log(`sbFetch ${method} ${path} -> ${res.status}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    console.error('Supabase error:', err);
+    throw new Error(err.message || err.hint || `HTTP ${res.status}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
 
-  // English day names are always used as Airtable keys
-  const EN_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+// ── Constants ─────────────────────────────────────────────────
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const COLORS = {
+  purple: '#7F77DD', teal: '#1D9E75', amber: '#EF9F27',
+  coral:  '#D85A30', pink: '#D4537E', blue:  '#378ADD', green: '#639922'
+};
+const CACHE_KEY = 'tt_cache_v2';
 
-  function toggleLang() {
-    lang = lang === 'en' ? 'de' : 'en';
-    localStorage.setItem('lang', lang);
-    applyLang();
+let records = [];
+let activeDay = DAYS[new Date().getDay() === 0 ? 4 : Math.min(new Date().getDay() - 1, 4)];
+let selectedColor = '';
+let deferredPrompt = null;
+
+// ── PWA ───────────────────────────────────────────────────────
+const manifest = {
+  name: 'Weekly Timetable', short_name: 'Timetable',
+  start_url: './', display: 'standalone',
+  background_color: '#0f0f0f', theme_color: '#0f0f0f', orientation: 'portrait',
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230f0f0f'/%3E%3Crect x='44' y='56' width='104' height='80' rx='10' fill='none' stroke='%23f0ede8' stroke-width='8'/%3E%3Crect x='44' y='56' width='104' height='26' rx='10' fill='%23f0ede8'/%3E%3Crect x='60' y='102' width='28' height='6' rx='3' fill='%23f0ede8'/%3E%3Crect x='60' y='116' width='48' height='6' rx='3' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230f0f0f'/%3E%3Crect x='116' y='148' width='280' height='216' rx='24' fill='none' stroke='%23f0ede8' stroke-width='20'/%3E%3Crect x='116' y='148' width='280' height='70' rx='24' fill='%23f0ede8'/%3E%3Crect x='156' y='272' width='76' height='16' rx='8' fill='%23f0ede8'/%3E%3Crect x='156' y='308' width='128' height='16' rx='8' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
+  ]
+};
+document.getElementById('manifest-link').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; showInstallBanner('pwa'); });
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (isIos && !isStandalone) setTimeout(() => showInstallBanner('ios'), 2000);
+
+function showInstallBanner(type) {
+  const area = document.getElementById('install-area');
+  if (type === 'pwa') {
+    area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong><br>Install for quick access</p><button class="install-btn" onclick="triggerInstall()">Install</button><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
+  } else {
+    area.innerHTML = `<div class="install-banner"><p><strong>Add to home screen</strong><br>Tap the share icon then "Add to Home Screen"</p><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
+  }
+}
+async function triggerInstall() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-area').innerHTML = '';
+}
+
+// ── Init UI ───────────────────────────────────────────────────
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+const daySelect = document.getElementById('f-day');
+DAYS.forEach(d => {
+  const o = document.createElement('option');
+  o.value = d; o.textContent = d;
+  if (d === activeDay) o.selected = true;
+  daySelect.appendChild(o);
+});
+
+const cp = document.getElementById('color-picker');
+Object.entries(COLORS).forEach(([name, hex]) => {
+  const sw = document.createElement('button');
+  sw.className = 'color-swatch'; sw.style.background = hex; sw.title = name;
+  sw.onclick = () => { selectedColor = name; document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); sw.classList.add('selected'); };
+  cp.appendChild(sw);
+});
+
+// ── Status helpers ────────────────────────────────────────────
+function showSync() { document.getElementById('sync-indicator').style.display = 'inline-flex'; document.getElementById('status-text').textContent = ''; }
+function hideSync(msg) { document.getElementById('sync-indicator').style.display = 'none'; document.getElementById('status-text').textContent = msg || ''; }
+function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
+
+// ── Cache ─────────────────────────────────────────────────────
+function loadFromCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    records = JSON.parse(raw);
+    renderTabs(); renderEvents();
+    return true;
+  } catch(e) { return false; }
+}
+function saveToCache(recs) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(recs)); } catch(e) {}
+}
+
+// ── Sort order ────────────────────────────────────────────────
+function getSortOrder(day) {
+  try { return JSON.parse(localStorage.getItem('sort_' + day) || '[]'); } catch(e) { return []; }
+}
+function saveSortOrder(day, ids) { localStorage.setItem('sort_' + day, JSON.stringify(ids)); }
+
+function sortedEvents(day) {
+  const evs = records.filter(r => r.day === day);
+  const order = getSortOrder(day);
+  if (!order.length) return evs.sort((a, b) => (a.start_time||'').localeCompare(b.start_time||''));
+  const ordered = order.map(id => evs.find(e => e.id === id)).filter(Boolean);
+  const unordered = evs.filter(e => !order.includes(e.id)).sort((a, b) => (a.start_time||'').localeCompare(b.start_time||''));
+  return [...ordered, ...unordered];
+}
+
+// ── Load events ───────────────────────────────────────────────
+async function loadEvents(silent) {
+  if (!silent) {
+    const hasCached = loadFromCache();
+    if (!hasCached) setStatus('Loading…');
+  }
+  showSync();
+  try {
+    const data = await sbFetch('GET', `${TABLE}?order=sort_order.asc,start_time.asc`);
+    records = data.map(r => ({
+      id:        r.id,
+      name:      r.event_name  || '',
+      day:       r.day         || '',
+      start:     r.start_time  || '',
+      end:       r.end_time    || '',
+      loc:       r.location    || '',
+      color:     r.color       || '',
+      cancelled: r.cancelled   || false,
+    }));
+    saveToCache(records);
+    hideSync(records.length ? `${records.length} event${records.length !== 1 ? 's' : ''}` : '');
     renderTabs();
     renderEvents();
+  } catch(e) {
+    hideSync('');
+    if (!silent) setStatus('Could not load — check connection');
+    console.error('Load error:', e);
   }
+}
 
-  function applyLang() {
-    const L = t();
-    document.getElementById('header-title').textContent = L.title;
-    document.getElementById('lang-btn').textContent = lang === 'en' ? 'DE' : 'EN';
-    document.getElementById('sheet-title').textContent = L.newEvent;
-    document.getElementById('lbl-name').textContent  = L.labelName;
-    document.getElementById('lbl-day').textContent   = L.labelDay;
-    document.getElementById('lbl-start').textContent = L.labelStart;
-    document.getElementById('lbl-end').textContent   = L.labelEnd;
-    document.getElementById('lbl-loc').textContent   = L.labelLoc;
-    document.getElementById('lbl-color').textContent = L.labelColor;
-    document.getElementById('btn-cancel').textContent = L.btnCancel;
-    document.getElementById('save-btn').textContent  = L.btnSave;
-    document.getElementById('f-name').placeholder   = L.placeName;
-    document.getElementById('f-loc').placeholder    = L.placeLoc;
-    // Rebuild day select with localised names, keeping the selected EN value
-    const sel = document.getElementById('f-day');
-    const current = sel.value;
-    sel.innerHTML = EN_DAYS.map((en, i) =>
-      `<option value="${en}"${en === current ? ' selected' : ''}>${L.days[i]}</option>`
-    ).join('');
-    // Update date display
-    const locale = lang === 'de' ? 'de-DE' : 'en-US';
-    document.getElementById('header-date').textContent =
-      new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' });
+// ── Render ────────────────────────────────────────────────────
+function renderTabs() {
+  document.getElementById('day-tabs').innerHTML = DAYS.map(d => {
+    const n = records.filter(r => r.day === d).length;
+    return `<button class="day-pill${d === activeDay ? ' active' : ''}" onclick="setDay('${d}')">${d.slice(0,3)}${n ? `<span class="cnt">${n}</span>` : ''}</button>`;
+  }).join('');
+}
+
+function setDay(d) {
+  activeDay = d;
+  document.getElementById('f-day').value = d;
+  renderTabs();
+  renderEvents();
+}
+
+function fmtTime(t) {
+  if (!t) return '?';
+  const [h, m] = t.split(':').map(Number);
+  if (isNaN(h)) return t;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function renderEvents() {
+  const el = document.getElementById('events-list');
+  const evs = sortedEvents(activeDay);
+  if (!evs.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">◯</div>No events on ${activeDay}<br><span style="font-size:12px;display:block;margin-top:4px">Tap + to add one</span></div>`;
+    return;
   }
-  // ─────────────────────────────────────────────────────────
+  el.innerHTML = evs.map(ev => {
+    const hex = COLORS[(ev.color||'').toLowerCase()] || '#555250';
+    const cancelledClass = ev.cancelled ? ' is-cancelled' : '';
+    const badge = ev.cancelled ? '<span class="cancelled-badge">Cancelled</span>' : '';
+    const locHtml = ev.loc ? `<div class="event-loc"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="flex-shrink:0;opacity:.5"><path d="M5 0C2.79 0 1 1.79 1 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5C4.17 5.5 3.5 4.83 3.5 4S4.17 2.5 5 2.5 6.5 3.17 6.5 4 5.83 5.5 5 5.5z" fill="currentColor"/></svg>${ev.loc}</div>` : '';
+    return `<div class="event-card${cancelledClass}" draggable="true" data-id="${ev.id}"
+      ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragend="dragEnd(event)" ondrop="dragDrop(event)"
+      ontouchstart="touchStart(event)" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
+      <div class="drag-handle" aria-label="Drag to reorder">
+        <svg width="12" height="16" viewBox="0 0 12 16" fill="none"><circle cx="4" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="12" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="12" r="1.5" fill="currentColor" opacity=".4"/></svg>
+      </div>
+      <div class="event-stripe" style="background:${ev.cancelled ? 'var(--text3)' : hex}"></div>
+      <div class="event-main" onclick="toggleCancelled('${ev.id}', ${ev.cancelled}, event)">
+        <div class="event-name">${ev.name || 'Untitled'}${badge}</div>
+        <div class="event-time">${fmtTime(ev.start)} – ${fmtTime(ev.end)}</div>
+        ${locHtml}
+      </div>
+      <button class="event-del" onclick="deleteEvent('${ev.id}',event)" aria-label="Delete">×</button>
+    </div>`;
+  }).join('');
+}
 
-  const COLORS = {
-    purple: '#7F77DD', teal: '#1D9E75', amber: '#EF9F27',
-    coral:  '#D85A30', pink: '#D4537E', blue:  '#378ADD', green: '#639922'
-  };
-
-  let records = [];
-  const todayIdx = new Date().getDay();
-  let activeDay = (todayIdx === 0 || todayIdx === 6) ? 'Monday' : EN_DAYS[todayIdx - 1];
-  let selectedColor = '';
-  let deferredPrompt = null;
-
-  // PWA manifest
-  const manifest = {
-    name: 'Weekly Timetable', short_name: 'Timetable',
-    start_url: './', display: 'standalone',
-    background_color: '#0f0f0f', theme_color: '#0f0f0f', orientation: 'portrait',
-    icons: [
-      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230f0f0f'/%3E%3Crect x='44' y='56' width='104' height='80' rx='10' fill='none' stroke='%23f0ede8' stroke-width='8'/%3E%3Crect x='44' y='56' width='104' height='26' rx='10' fill='%23f0ede8'/%3E%3Crect x='60' y='102' width='28' height='6' rx='3' fill='%23f0ede8'/%3E%3Crect x='60' y='116' width='48' height='6' rx='3' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
-      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230f0f0f'/%3E%3Crect x='116' y='148' width='280' height='216' rx='24' fill='none' stroke='%23f0ede8' stroke-width='20'/%3E%3Crect x='116' y='148' width='280' height='70' rx='24' fill='%23f0ede8'/%3E%3Crect x='156' y='272' width='76' height='16' rx='8' fill='%23f0ede8'/%3E%3Crect x='156' y='308' width='128' height='16' rx='8' fill='%23f0ede8' opacity='.5'/%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
-    ]
-  };
-  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
-
-  // Build color swatches
-  const cp = document.getElementById('color-picker');
-  Object.entries(COLORS).forEach(([name, hex]) => {
-    const sw = document.createElement('button');
-    sw.className = 'color-swatch'; sw.style.background = hex; sw.title = name;
-    sw.onclick = () => {
-      selectedColor = name;
-      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-      sw.classList.add('selected');
-    };
-    cp.appendChild(sw);
-  });
-
-  // PWA install
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPrompt = e; showInstallBanner('pwa');
-  });
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  if (isIos && !isStandalone) setTimeout(() => showInstallBanner('ios'), 2000);
-
-  function showInstallBanner(type) {
-    const L = t();
-    const area = document.getElementById('install-area');
-    if (type === 'pwa') {
-      area.innerHTML = `<div class="install-banner"><p><strong>${L.install1title}</strong><br>${L.install1body}</p><button class="install-btn" onclick="triggerInstall()">${L.install1btn}</button><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
-    } else {
-      area.innerHTML = `<div class="install-banner"><p><strong>${L.install1title}</strong><br>${L.install2body}</p><button class="install-close" onclick="this.closest('.install-banner').remove()">×</button></div>`;
-    }
+// ── Toggle cancelled ──────────────────────────────────────────
+async function toggleCancelled(id, current, e) {
+  e.stopPropagation();
+  const newVal = !current;
+  const rec = records.find(r => r.id === id);
+  if (rec) { rec.cancelled = newVal; renderEvents(); }
+  try {
+    await sbFetch('PATCH', `${TABLE}?id=eq.${id}`, { cancelled: newVal });
+    saveToCache(records);
+  } catch(err) {
+    if (rec) { rec.cancelled = current; renderEvents(); }
+    setStatus('Update failed: ' + err.message);
   }
-  async function triggerInstall() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt(); await deferredPrompt.userChoice;
-    deferredPrompt = null; document.getElementById('install-area').innerHTML = '';
-  }
+}
 
-  // ── Airtable ─────────────────────────────────────────────
-  const AT_BASE = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE_NAME)}`;
-  const AT_HEADERS = { 'Authorization': `Bearer ${AIRTABLE_TOKEN}`, 'Content-Type': 'application/json' };
+// ── Save event ────────────────────────────────────────────────
+function openAdd() {
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-day').value = activeDay;
+  document.getElementById('f-start').value = '';
+  document.getElementById('f-end').value = '';
+  document.getElementById('f-loc').value = '';
+  selectedColor = '';
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  document.getElementById('save-btn').disabled = false;
+  document.getElementById('modal').classList.add('show');
+  setTimeout(() => document.getElementById('f-name').focus(), 300);
+}
 
-  async function atFetch(method, path = '', body = null) {
-    const res = await fetch(AT_BASE + path, {
-      method, headers: AT_HEADERS,
-      body: body ? JSON.stringify(body) : undefined
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+async function saveEvent() {
+  const name  = document.getElementById('f-name').value.trim();
+  const day   = document.getElementById('f-day').value;
+  const start = document.getElementById('f-start').value;
+  const end   = document.getElementById('f-end').value;
+  const loc   = document.getElementById('f-loc').value.trim();
+  if (!name || !day || !start || !end) { alert('Please fill in name, day, start and end time.'); return; }
+  document.getElementById('save-btn').disabled = true;
+  setStatus('Saving…');
+  try {
+    await sbFetch('POST', TABLE, {
+      event_name: name,
+      day,
+      start_time: start,
+      end_time:   end,
+      location:   loc || null,
+      color:      selectedColor || null,
+      cancelled:  false,
+      sort_order: records.filter(r => r.day === day).length + 1
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Airtable error ${res.status}`);
-    }
-    return res.json();
-  }
-
-  function parseRecord(r) {
-    const f = r.fields;
-    const sel = v => v ? (typeof v === 'object' ? v.name : v) : '';
-    return {
-      id:        r.id,
-      name:      f['Event Name']  || '',
-      day:       sel(f['Day']),
-      start:     f['Start Time']  || '',
-      end:       f['End Time']    || '',
-      loc:       f['Location']    || '',
-      color:     sel(f['Color']),
-      cancelled: f['Cancelled']   || false
-    };
-  }
-
-  function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
-  function showSync() {
-    document.getElementById('sync-dot').style.display = 'inline';
-    document.getElementById('status-text').textContent = '';
-  }
-  function hideSync(msg) {
-    document.getElementById('sync-dot').style.display = 'none';
-    setStatus(msg || '');
-  }
-
-  const CACHE_KEY = 'tt_cache_v1';
-
-  function loadFromCache() {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (!raw) return false;
-      records = JSON.parse(raw);
-      renderTabs();
-      renderEvents();
-      return true;
-    } catch(e) { return false; }
-  }
-
-  function saveToCache(recs) {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(recs)); } catch(e) {}
-  }
-
-  async function loadEvents(silent) {
-    if (!silent) {
-      const hasCached = loadFromCache();
-      if (!hasCached) setStatus(t().loading);
-    }
-    showSync();
-    try {
-      let all = [], offset = null;
-      do {
-        const url = offset ? `?offset=${offset}` : '';
-        const data = await atFetch('GET', url);
-        all = all.concat(data.records.map(parseRecord));
-        offset = data.offset || null;
-      } while (offset);
-      records = all;
-      saveToCache(records);
-      hideSync(records.length ? t().eventsCount(records.length) : '');
-      renderTabs();
-      renderEvents();
-    } catch (e) {
-      hideSync('');
-      if (!silent) setStatus(t().errLoad);
-    }
-  }
-
-  // ── Sort order ────────────────────────────────────────────
-  function getSortOrder(day) {
-    try { return JSON.parse(localStorage.getItem('sort_' + day) || '[]'); } catch(e) { return []; }
-  }
-  function saveSortOrder(day, ids) { localStorage.setItem('sort_' + day, JSON.stringify(ids)); }
-  function sortedEvents(day) {
-    const evs = records.filter(r => r.day === day);
-    const order = getSortOrder(day);
-    if (!order.length) return evs.sort((a,b) => a.start.localeCompare(b.start));
-    const ordered   = order.map(id => evs.find(e => e.id === id)).filter(Boolean);
-    const unordered = evs.filter(e => !order.includes(e.id)).sort((a,b) => a.start.localeCompare(b.start));
-    return [...ordered, ...unordered];
-  }
-
-  function renderTabs() {
-    const L = t();
-    document.getElementById('day-tabs').innerHTML = EN_DAYS.map((en, i) => {
-      const n = records.filter(r => r.day === en).length;
-      return `<button class="day-pill${en === activeDay ? ' active' : ''}" onclick="setDay('${en}')">${L.dayShort[i]}${n ? `<span class="cnt">${n}</span>` : ''}</button>`;
-    }).join('');
-  }
-
-  function setDay(d) {
-    activeDay = d;
-    document.getElementById('f-day').value = d;
-    renderTabs(); renderEvents();
-  }
-
-  function fmtTime(t) {
-    if (!t) return '?';
-    const [h, m] = t.split(':').map(Number);
-    if (isNaN(h)) return t;
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-  }
-
-  function renderEvents() {
-    const L = t();
-    const el = document.getElementById('events-list');
-    const evs = sortedEvents(activeDay);
-    const activeDayLocalised = L.days[EN_DAYS.indexOf(activeDay)];
-    if (!evs.length) {
-      el.innerHTML = `<div class="empty-state"><div class="empty-icon">◯</div>${L.noEvents(activeDayLocalised)}<br><span style="font-size:12px;display:block;margin-top:4px">${L.tapToAdd}</span></div>`;
-      return;
-    }
-    el.innerHTML = evs.map(ev => {
-      const hex = COLORS[(ev.color || '').toLowerCase()] || '#555250';
-      const stripe = ev.cancelled ? 'var(--text3)' : hex;
-      const locHtml = ev.loc ? `<div class="event-loc"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" style="flex-shrink:0;opacity:.5"><path d="M5 0C2.79 0 1 1.79 1 4c0 3 4 8 4 8s4-5 4-8c0-2.21-1.79-4-4-4zm0 5.5C4.17 5.5 3.5 4.83 3.5 4S4.17 2.5 5 2.5 6.5 3.17 6.5 4 5.83 5.5 5 5.5z" fill="currentColor"/></svg>${ev.loc}</div>` : '';
-      const cancelIcon = ev.cancelled
-        ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-        : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 4.5l5 5M9.5 4.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-      return `<div class="event-card${ev.cancelled ? ' is-cancelled' : ''}" draggable="true" data-id="${ev.id}"
-        ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragend="dragEnd(event)" ondrop="dragDrop(event)"
-        ontouchstart="touchStart(event)" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">
-        <div class="drag-handle"><svg width="12" height="16" viewBox="0 0 12 16" fill="none"><circle cx="4" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="12" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="12" r="1.5" fill="currentColor" opacity=".4"/></svg></div>
-        <div class="event-stripe" style="background:${stripe}"></div>
-        <div class="event-main">
-          <div class="event-name">${ev.name || 'Untitled'}${ev.cancelled ? `<span class="cancelled-badge">${L.cancelled}</span>` : ''}</div>
-          <div class="event-time">${fmtTime(ev.start)} – ${fmtTime(ev.end)}</div>
-          ${locHtml}
-        </div>
-        <button class="cancel-btn" onclick="toggleCancelled('${ev.id}',${ev.cancelled},event)" title="${ev.cancelled ? 'Restore' : L.cancelled}">${cancelIcon}</button>
-        <button class="event-del" onclick="deleteEvent('${ev.id}',event)" aria-label="Delete">×</button>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Drag (desktop) ────────────────────────────────────────
-  let dragSrcId = null;
-  function dragStart(e) { dragSrcId = e.currentTarget.dataset.id; e.currentTarget.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
-  function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over')); if (e.currentTarget.dataset.id !== dragSrcId) e.currentTarget.classList.add('drag-over'); }
-  function dragDrop(e) { e.preventDefault(); const tid = e.currentTarget.dataset.id; if (dragSrcId && tid && dragSrcId !== tid) reorder(dragSrcId, tid); }
-  function dragEnd(e) { e.currentTarget.style.opacity = ''; document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over')); dragSrcId = null; }
-
-  // ── Drag (touch) ──────────────────────────────────────────
-  let touchDragId = null, touchClone = null, touchOffsetY = 0;
-  function touchStart(e) {
-    if (!e.target.closest('.drag-handle')) return;
-    e.preventDefault();
-    const card = e.currentTarget;
-    touchDragId = card.dataset.id;
-    const rect = card.getBoundingClientRect();
-    touchOffsetY = e.touches[0].clientY - rect.top;
-    touchClone = card.cloneNode(true);
-    touchClone.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;opacity:0.85;z-index:999;pointer-events:none;transition:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);`;
-    document.body.appendChild(touchClone);
-    card.style.opacity = '0.3';
-  }
-  function touchMove(e) {
-    if (!touchDragId || !touchClone) return;
-    e.preventDefault();
-    const y = e.touches[0].clientY;
-    touchClone.style.top = (y - touchOffsetY) + 'px';
-    document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
-    const target = document.elementsFromPoint(e.touches[0].clientX, y).find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
-    if (target) target.classList.add('drag-over');
-  }
-  function touchEnd(e) {
-    if (!touchDragId) return;
-    const y = e.changedTouches[0].clientY;
-    const target = document.elementsFromPoint(e.changedTouches[0].clientX, y).find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
-    if (target) reorder(touchDragId, target.dataset.id);
-    if (touchClone) { touchClone.remove(); touchClone = null; }
-    document.querySelectorAll('.event-card').forEach(c => { c.style.opacity = ''; c.classList.remove('drag-over'); });
-    touchDragId = null;
-  }
-  function reorder(srcId, targetId) {
-    const ids = sortedEvents(activeDay).map(e => e.id);
-    const from = ids.indexOf(srcId), to = ids.indexOf(targetId);
-    if (from === -1 || to === -1) return;
-    ids.splice(from, 1); ids.splice(to, 0, srcId);
-    saveSortOrder(activeDay, ids); renderEvents();
-  }
-
-  // ── Modal ─────────────────────────────────────────────────
-  function openAdd() {
-    document.getElementById('f-name').value = '';
-    document.getElementById('f-day').value = activeDay;
-    document.getElementById('f-start').value = '';
-    document.getElementById('f-end').value = '';
-    document.getElementById('f-loc').value = '';
-    selectedColor = '';
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    closeModal();
+    await loadEvents();
+  } catch(e) {
+    setStatus('Save failed: ' + e.message);
     document.getElementById('save-btn').disabled = false;
-    document.getElementById('modal').classList.add('show');
-    setTimeout(() => document.getElementById('f-name').focus(), 300);
   }
-  function closeModal() { document.getElementById('modal').classList.remove('show'); }
-  function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+}
 
-  async function saveEvent() {
-    const name  = document.getElementById('f-name').value.trim();
-    const day   = document.getElementById('f-day').value;
-    const start = document.getElementById('f-start').value;
-    const end   = document.getElementById('f-end').value;
-    const loc   = document.getElementById('f-loc').value.trim();
-    if (!name || !day || !start || !end) { alert(t().errRequired); return; }
-    document.getElementById('save-btn').disabled = true;
-    setStatus(t().saving);
-    const fields = { [FIELDS.name]: name, [FIELDS.day]: day, [FIELDS.start]: start, [FIELDS.end]: end };
-    if (loc)           fields[FIELDS.loc]   = loc;
-    if (selectedColor) fields[FIELDS.color] = selectedColor;
-    try {
-      await atFetch('POST', '', { records: [{ fields }], typecast: true });
-      closeModal(); await loadEvents();
-    } catch(e) {
-      setStatus('Error: ' + e.message);
-      document.getElementById('save-btn').disabled = false;
-    }
-  }
+// ── Delete event ──────────────────────────────────────────────
+async function deleteEvent(id, e) {
+  e.stopPropagation();
+  if (!confirm('Remove this event?')) return;
+  setStatus('Removing…');
+  try {
+    await sbFetch('DELETE', `${TABLE}?id=eq.${id}`);
+    await loadEvents();
+  } catch(e) { setStatus('Delete failed'); }
+}
 
-  async function toggleCancelled(id, current, e) {
-    e.stopPropagation();
-    setStatus(t().updating);
-    try {
-      await atFetch('PATCH', `/${id}`, { fields: { 'Cancelled': !current } });
-      await loadEvents();
-    } catch(err) { setStatus('Error: ' + err.message); }
-  }
+// ── Drag and drop (desktop) ───────────────────────────────────
+let dragSrcId = null;
+function dragStart(e) { dragSrcId = e.currentTarget.dataset.id; e.currentTarget.style.opacity = '0.4'; e.dataTransfer.effectAllowed = 'move'; }
+function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over')); if (e.currentTarget.dataset.id !== dragSrcId) e.currentTarget.classList.add('drag-over'); }
+function dragDrop(e) { e.preventDefault(); const targetId = e.currentTarget.dataset.id; if (dragSrcId && targetId && dragSrcId !== targetId) reorder(dragSrcId, targetId); }
+function dragEnd(e) { e.currentTarget.style.opacity = ''; document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over')); dragSrcId = null; }
 
-  async function toggleCancelled(id, current, e) {
-    e.stopPropagation();
-    const newVal = !current;
-    // Optimistic UI update
-    const rec = records.find(r => r.id === id);
-    if (rec) { rec.cancelled = newVal; renderEvents(); }
-    try {
-      await atFetch('PATCH', `/${id}`, { fields: { 'Cancelled': newVal }, typecast: true });
-    } catch(err) {
-      // Revert on failure
-      if (rec) { rec.cancelled = current; renderEvents(); }
-      setStatus('Update failed: ' + err.message);
-    }
-  }
+// ── Touch drag (mobile) ───────────────────────────────────────
+let touchDragId = null, touchClone = null, touchOffsetY = 0;
+function touchStart(e) {
+  const card = e.currentTarget;
+  if (!e.target.closest('.drag-handle')) return;
+  e.preventDefault();
+  touchDragId = card.dataset.id;
+  const rect = card.getBoundingClientRect();
+  touchOffsetY = e.touches[0].clientY - rect.top;
+  touchClone = card.cloneNode(true);
+  touchClone.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;opacity:0.85;z-index:999;pointer-events:none;transition:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);`;
+  document.body.appendChild(touchClone);
+  card.style.opacity = '0.3';
+}
+function touchMove(e) {
+  if (!touchDragId || !touchClone) return;
+  e.preventDefault();
+  const y = e.touches[0].clientY;
+  touchClone.style.top = (y - touchOffsetY) + 'px';
+  document.querySelectorAll('.event-card').forEach(c => c.classList.remove('drag-over'));
+  const els = document.elementsFromPoint(e.touches[0].clientX, y);
+  const target = els.find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
+  if (target) target.classList.add('drag-over');
+}
+function touchEnd(e) {
+  if (!touchDragId) return;
+  const y = e.changedTouches[0].clientY;
+  const els = document.elementsFromPoint(e.changedTouches[0].clientX, y);
+  const target = els.find(el => el.classList.contains('event-card') && el.dataset.id !== touchDragId);
+  if (target) reorder(touchDragId, target.dataset.id);
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+  document.querySelectorAll('.event-card').forEach(c => { c.style.opacity = ''; c.classList.remove('drag-over'); });
+  touchDragId = null;
+}
 
-  async function deleteEvent(id, e) {
-    e.stopPropagation();
-    if (!confirm(t().confirmDel)) return;
-    setStatus(t().removing);
-    try {
-      await atFetch('DELETE', `/${id}`); await loadEvents();
-    } catch(e) { setStatus('Error: ' + e.message); }
-  }
+function reorder(srcId, targetId) {
+  const evs = sortedEvents(activeDay);
+  const ids = evs.map(e => e.id);
+  const from = ids.indexOf(srcId), to = ids.indexOf(targetId);
+  if (from === -1 || to === -1) return;
+  ids.splice(from, 1);
+  ids.splice(to, 0, srcId);
+  saveSortOrder(activeDay, ids);
+  renderEvents();
+}
 
-  // Init
-  applyLang();
-  loadEvents();
+// ── Start ─────────────────────────────────────────────────────
+loadEvents();
 </script>
 </body>
 </html>
