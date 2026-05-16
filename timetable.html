@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f0f0f">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self' https://yririhzvgwaywnaufebz.supabase.co https://www.omdbapi.com; img-src 'self' data: https: http:; font-src 'self' data:;">
-<title>Timetable<\/title>
+<title>Timetable</title>
 <link rel="manifest" id="manifest-link">
 <style>
   :root {
@@ -89,43 +89,43 @@
     select.field-input option { background: #fff; }
     .add-btn { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
   }
-<\/style>
-<\/head>
+</style>
+</head>
 <body>
 <div class="app">
   <div class="header">
     <div class="header-top">
-      <div><div class="header-title">Timetable<\/div><div class="header-date" id="header-date"><\/div><\/div>
-      <button class="add-btn" onclick="openAdd()" aria-label="Add event">+<\/button>
-    <\/div>
-    <div class="day-scroll" id="day-tabs"><\/div>
-  <\/div>
-  <div id="install-area"><\/div>
+      <div><div class="header-title">Timetable</div><div class="header-date" id="header-date"></div></div>
+      <button class="add-btn" onclick="openAdd()" aria-label="Add event">+</button>
+    </div>
+    <div class="day-scroll" id="day-tabs"></div>
+  </div>
+  <div id="install-area"></div>
   <div class="status-bar" id="status-bar">
-    <span id="sync-indicator" style="display:none"><span class="sync-dot"><\/span>syncing<\/span>
-    <span id="status-text"><\/span>
-  <\/div>
-  <div class="content"><div class="events-list" id="events-list"><\/div><\/div>
-<\/div>
+    <span id="sync-indicator" style="display:none"><span class="sync-dot"></span>syncing</span>
+    <span id="status-text"></span>
+  </div>
+  <div class="content"><div class="events-list" id="events-list"></div></div>
+</div>
 
 <div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
   <div class="modal-sheet">
-    <div class="sheet-handle"><\/div>
-    <div class="sheet-title">New event<\/div>
-    <div class="field-group"><label class="field-label">Event name<\/label><input class="field-input" id="f-name" type="text" placeholder="e.g. Team standup" autocomplete="off"><\/div>
-    <div class="field-group"><label class="field-label">Day<\/label><select class="field-input" id="f-day"><\/select><\/div>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">New event</div>
+    <div class="field-group"><label class="field-label">Event name</label><input class="field-input" id="f-name" type="text" placeholder="e.g. Team standup" autocomplete="off"></div>
+    <div class="field-group"><label class="field-label">Day</label><select class="field-input" id="f-day"></select></div>
     <div class="field-row">
-      <div class="field-group"><label class="field-label">Start<\/label><input class="field-input" id="f-start" type="time"><\/div>
-      <div class="field-group"><label class="field-label">End<\/label><input class="field-input" id="f-end" type="time"><\/div>
-    <\/div>
-    <div class="field-group"><label class="field-label">Location (optional)<\/label><input class="field-input" id="f-loc" type="text" placeholder="e.g. Room 3B" autocomplete="off"><\/div>
-    <div class="field-group"><label class="field-label">Color<\/label><div class="color-picker" id="color-picker"><\/div><\/div>
+      <div class="field-group"><label class="field-label">Start</label><input class="field-input" id="f-start" type="time"></div>
+      <div class="field-group"><label class="field-label">End</label><input class="field-input" id="f-end" type="time"></div>
+    </div>
+    <div class="field-group"><label class="field-label">Location (optional)</label><input class="field-input" id="f-loc" type="text" placeholder="e.g. Room 3B" autocomplete="off"></div>
+    <div class="field-group"><label class="field-label">Color</label><div class="color-picker" id="color-picker"></div></div>
     <div class="sheet-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel<\/button>
-      <button class="btn-save" id="save-btn" onclick="saveEvent()">Save event<\/button>
-    <\/div>
-  <\/div>
-<\/div>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="saveEvent()">Save event</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://yririhzvgwaywnaufebz.supabase.co';
@@ -154,8 +154,8 @@ if (isIos && !isStandalone) setTimeout(()=>showInstallBanner('ios'),2000);
 function showInstallBanner(type) {
   const a = document.getElementById('install-area');
   a.innerHTML = type==='pwa'
-    ? '<div class="install-banner"><p><strong>Add to home screen<\/strong><br>Install for quick access<\/p><button class="install-btn" onclick="triggerInstall()">Install<\/button><button class="install-close" onclick="this.closest(\'.install-banner\').remove()">x<\/button><\/div>'
-    : '<div class="install-banner"><p><strong>Add to home screen<\/strong><br>Tap share then Add to Home Screen<\/p><button class="install-close" onclick="this.closest(\'.install-banner\').remove()">x<\/button><\/div>';
+    ? '<div class="install-banner"><p><strong>Add to home screen</strong><br>Install for quick access</p><button class="install-btn" onclick="triggerInstall()">Install</button><button class="install-close" onclick="this.closest(\'.install-banner\').remove()">x</button></div>'
+    : '<div class="install-banner"><p><strong>Add to home screen</strong><br>Tap share then Add to Home Screen</p><button class="install-close" onclick="this.closest(\'.install-banner\').remove()">x</button></div>';
 }
 async function triggerInstall() { if(!deferredPrompt)return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; document.getElementById('install-area').innerHTML=''; }
 
@@ -176,10 +176,10 @@ function saveSortOrder(day,ids) { localStorage.setItem('sort_'+day,JSON.stringif
 
 function sortedEvents(day) {
   const evs = records.filter(r=>r.day===day);
-  const order = getSortOrder(day);
+  const order = getSortOrder(day).map(String);
   if(!order.length) return evs.sort((a,b)=>(a.start||'').localeCompare(b.start||''));
-  const ordered = order.map(id=>evs.find(e=>e.id===id)).filter(Boolean);
-  const unordered = evs.filter(e=>!order.includes(e.id)).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+  const ordered = order.map(id=>evs.find(e=>String(e.id)===id)).filter(Boolean);
+  const unordered = evs.filter(e=>!order.includes(String(e.id))).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
   return [...ordered,...unordered];
 }
 
@@ -198,7 +198,7 @@ async function loadEvents(silent) {
 function renderTabs() {
   document.getElementById('day-tabs').innerHTML = DAYS.map(d => {
     const n = records.filter(r=>r.day===d).length;
-    return '<button class="day-pill'+(d===activeDay?' active':'')+'" onclick="setDay(\''+d+'\')">'+d.slice(0,3)+(n?'<span class="cnt">'+n+'<\/span>':'')+'<\/button>';
+    return '<button class="day-pill'+(d===activeDay?' active':'')+'" onclick="setDay(\''+d+'\')">'+d.slice(0,3)+(n?'<span class="cnt">'+n+'</span>':'')+'</button>';
   }).join('');
 }
 function setDay(d) { activeDay=d; document.getElementById('f-day').value=d; renderTabs(); renderEvents(); }
@@ -207,20 +207,26 @@ function fmtTime(t) { if(!t)return'?'; const[h,m]=t.split(':').map(Number); if(i
 function renderEvents() {
   const el = document.getElementById('events-list');
   const evs = sortedEvents(activeDay);
-  if(!evs.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">O<\/div>No events on '+activeDay+'<br><span style="font-size:12px;display:block;margin-top:4px">Tap + to add one<\/span><\/div>'; return; }
+  if(!evs.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">O</div>No events on '+activeDay+'<br><span style="font-size:12px;display:block;margin-top:4px">Tap + to add one</span></div>'; return; }
   el.innerHTML = evs.map(ev => {
     const hex = COLORS[(ev.color||'').toLowerCase()]||'#555250';
     const cc = ev.cancelled?' is-cancelled':'';
-    const badge = ev.cancelled?'<span class="cancelled-badge">Cancelled<\/span>':'';
-    const loc = ev.loc?'<div class="event-loc">'+ev.loc+'<\/div>':'';
+    const badge = ev.cancelled?'<span class="cancelled-badge">Cancelled</span>':'';
+    const loc = ev.loc?'<div class="event-loc">'+ev.loc+'</div>':'';
     return '<div class="event-card'+cc+'" draggable="true" data-id="'+ev.id+'" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragend="dragEnd(event)" ondrop="dragDrop(event)" ontouchstart="touchStart(event)" ontouchmove="touchMove(event)" ontouchend="touchEnd(event)">'
-      +'<div class="drag-handle" aria-label="Drag to reorder"><svg width="12" height="16" viewBox="0 0 12 16" fill="none"><circle cx="4" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="12" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="12" r="1.5" fill="currentColor" opacity=".4"/><\/svg><\/div>'
-      +'<div class="event-stripe" style="background:'+(ev.cancelled?'var(--text3)':hex)+'"><\/div>'
-      +'<div class="event-main" onclick="toggleCancelled(\''+ev.id+'\',event)"><div class="event-name">'+ev.name+badge+'<\/div><div class="event-time">'+fmtTime(ev.start)+' - '+fmtTime(ev.end)+'<\/div>'+loc+'<\/div>'
-      +'<button class="event-del" onclick="deleteEvent(\''+ev.id+'\',event)" aria-label="Delete">x<\/button><\/div>';
+      +'<div class="drag-handle" aria-label="Drag to reorder"><svg width="12" height="16" viewBox="0 0 12 16" fill="none"><circle cx="4" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="4" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="8" r="1.5" fill="currentColor" opacity=".4"/><circle cx="4" cy="12" r="1.5" fill="currentColor" opacity=".4"/><circle cx="8" cy="12" r="1.5" fill="currentColor" opacity=".4"/></svg></div>'
+      +'<div class="event-stripe" style="background:'+(ev.cancelled?'var(--text3)':hex)+'"></div>'
+      +'<div class="event-main" onclick="toggleCancelled(\''+ev.id+'\',event)" ontouchend="handleCardTap(\''+ev.id+'\',event)"><div class="event-name">'+ev.name+badge+'</div><div class="event-time">'+fmtTime(ev.start)+' - '+fmtTime(ev.end)+'</div>'+loc+'</div>'
+      +'<button class="event-del" onclick="deleteEvent(\''+ev.id+'\',event)" aria-label="Delete">x</button></div>';
   }).join('');
 }
 
+function handleCardTap(id, e) {
+  if (touchDragId) return;
+  e.preventDefault();
+  toggleCancelled(id, e);
+}
+  
 async function toggleCancelled(id, e) {
   e.stopPropagation();
   const rec = records.find(r=>String(r.id)===String(id));
@@ -274,9 +280,18 @@ function touchStart(e){const card=e.currentTarget;if(!e.target.closest('.drag-ha
 function touchMove(e){if(!touchDragId||!touchClone)return;e.preventDefault();const y=e.touches[0].clientY;touchClone.style.top=(y-touchOffsetY)+'px';document.querySelectorAll('.event-card').forEach(c=>c.classList.remove('drag-over'));const els=document.elementsFromPoint(e.touches[0].clientX,y);const t=els.find(el=>el.classList.contains('event-card')&&el.dataset.id!==touchDragId);if(t)t.classList.add('drag-over');}
 function touchEnd(e){if(!touchDragId)return;const y=e.changedTouches[0].clientY;const els=document.elementsFromPoint(e.changedTouches[0].clientX,y);const t=els.find(el=>el.classList.contains('event-card')&&el.dataset.id!==touchDragId);if(t)reorder(touchDragId,t.dataset.id);if(touchClone){touchClone.remove();touchClone=null;}document.querySelectorAll('.event-card').forEach(c=>{c.style.opacity='';c.classList.remove('drag-over');});touchDragId=null;}
 
-function reorder(srcId,targetId){const evs=sortedEvents(activeDay);const ids=evs.map(e=>e.id);const from=ids.indexOf(srcId),to=ids.indexOf(targetId);if(from===-1||to===-1)return;ids.splice(from,1);ids.splice(to,0,srcId);saveSortOrder(activeDay,ids);renderEvents();}
-
+function reorder(srcId, targetId) {
+  const evs = sortedEvents(activeDay);
+  const ids = evs.map(e=>String(e.id));
+  const from = ids.indexOf(String(srcId)), to = ids.indexOf(String(targetId));
+  if(from===-1||to===-1) return;
+  ids.splice(from,1);
+  ids.splice(to,0,String(srcId));
+  saveSortOrder(activeDay, ids);
+  renderEvents();
+}
+  
 loadEvents();
-<\/script>
-<\/body>
-<\/html>
+</script>
+</body>
+</html>
