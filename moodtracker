@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MoodTracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" id="pwa-manifest">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<title>MoodTracker</title>
+<style>
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --text: #0f172a;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --accent: #6366f1;
+  --accent-light: #eef2ff;
+  --success: #16a34a;
+  --success-light: #f0fdf4;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --radius: 12px;
+  --radius-lg: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', sans-serif; overscroll-behavior: none; }
+
+.app { display: flex; flex-direction: column; height: 100%; width: 100%; }
+
+.app-header {
+  padding: calc(var(--safe-top) + 14px) 20px 14px;
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.app-title { font-size: 17px; font-weight: 600; }
+.app-date  { font-size: 12px; color: var(--text2); margin-top: 1px; }
+
+.tab-bar {
+  display: flex;
+  background: var(--surface);
+  border-top: 0.5px solid var(--border2);
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px 8px;
+  font-size: 10px; font-weight: 500; color: var(--text3);
+  background: none; border: none; cursor: pointer; transition: color .15s;
+}
+.tab.active { color: var(--accent); }
+.tab-icon { font-size: 20px; line-height: 1; }
+
+.content {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(var(--safe-bottom) + 16px);
+  scrollbar-width: none;
+}
+.content::-webkit-scrollbar { display: none; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+
+/* Sliders */
+.slider-row { margin-bottom: 4px; }
+.slider-label-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.slider-label { font-size: 13px; font-weight: 500; }
+.slider-value { font-size: 18px; font-weight: 700; color: var(--accent); min-width: 32px; text-align: right; }
+
+input[type=range] {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  background: var(--surface2); height: 6px; border-radius: 99px; cursor: pointer;
+  margin-bottom: 12px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: white; border: 2px solid var(--accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: white; border: 2px solid var(--accent); border: none;
+}
+
+/* Sleep picker */
+.sleep-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sleep-btn {
+  padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--border2); background: var(--surface2); color: var(--text2); cursor: pointer;
+  transition: all .12s;
+}
+.sleep-btn.selected { background: var(--accent-light); color: var(--accent); border-color: #c7d2fe; }
+
+/* Side effect chips */
+.chip-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.chip {
+  padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border2); background: var(--surface2); color: var(--text2);
+  cursor: pointer; transition: all .12s; user-select: none;
+}
+.chip.selected { background: var(--accent-light); color: var(--accent); border-color: #c7d2fe; }
+
+/* Meds checkbox */
+.meds-row {
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+}
+.meds-check {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 2px solid var(--border2); background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .15s; font-size: 14px;
+}
+.meds-check.checked { background: var(--success); border-color: var(--success); color: white; }
+.meds-label { font-size: 14px; font-weight: 500; }
+
+/* Notes */
+textarea {
+  width: 100%; padding: 10px 12px; border: 0.5px solid var(--border2);
+  border-radius: var(--radius); font-size: 14px; font-family: inherit;
+  color: var(--text); background: var(--surface2); resize: none; outline: none;
+  transition: border-color .15s; line-height: 1.5;
+}
+textarea:focus { border-color: var(--accent); }
+
+/* Save button */
+.btn-primary {
+  width: 100%; height: 46px; border-radius: var(--radius);
+  background: var(--accent); color: white; border: none;
+  font-size: 15px; font-weight: 500; font-family: inherit;
+  cursor: pointer; margin-top: 4px; transition: background .12s;
+}
+.btn-primary:active { background: #4f46e5; }
+
+/* Save flash */
+.save-flash {
+  position: fixed; bottom: calc(var(--safe-bottom) + 70px); left: 50%; transform: translateX(-50%);
+  background: var(--text); color: white; padding: 10px 20px; border-radius: 99px;
+  font-size: 13px; font-weight: 500; z-index: 200; pointer-events: none;
+  animation: fadeFlash 2s ease forwards;
+}
+@keyframes fadeFlash {
+  0%   { opacity:0; transform:translateX(-50%) translateY(8px); }
+  15%  { opacity:1; transform:translateX(-50%) translateY(0); }
+  70%  { opacity:1; }
+  100% { opacity:0; }
+}
+
+/* History */
+.log-entry {
+  background: var(--surface); border: 0.5px solid var(--border2);
+  border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px;
+}
+.log-date { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.log-scores { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.log-score-chip {
+  padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 500;
+  background: var(--accent-light); color: var(--accent);
+}
+.log-detail { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* Report charts */
+.chart-wrap { position: relative; height: 180px; margin-top: 8px; }
+.range-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.range-btn {
+  padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer;
+  transition: all .12s;
+}
+.range-btn.active { background: var(--accent-light); color: var(--accent); border-color: #c7d2fe; }
+
+/* iOS install banner */
+.install-banner {
+  background: var(--accent); color: white; padding: 10px 14px;
+  font-size: 13px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.install-banner p { flex: 1; margin: 0; line-height: 1.4; }
+.install-banner strong { display: block; font-size: 14px; }
+.inst-close { background: none; border: none; color: rgba(255,255,255,.7); font-size: 20px; cursor: pointer; }
+
+/* Empty */
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; line-height: 1.6; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: .25; display: block; }
+
+@media (min-width: 600px) and (max-width: 1023px) {
+  body { background: var(--surface2); }
+  .app { max-width: 540px; margin: 0 auto; min-height: 100vh; background: var(--bg); border-left: 0.5px solid var(--border2); border-right: 0.5px solid var(--border2); }
+}
+@media (min-width: 1024px) {
+  body { background: var(--surface2); display: flex; align-items: flex-start; justify-content: center; padding: 40px 0 0; min-height: 100vh; }
+  .app { width: 390px; height: calc(100vh - 80px); border-radius: 28px; border: 0.5px solid var(--border2); overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.12); flex-shrink: 0; }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --surface2: #293548;
+    --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.12);
+    --text: #f1f5f9; --text2: #94a3b8; --text3: #64748b;
+    --accent-light: #1e1b4b; --success-light: #052e16;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <div>
+      <div class="app-title">MoodTracker</div>
+      <div class="app-date" id="header-date"></div>
+    </div>
+  </div>
+
+  <div id="install-area"></div>
+
+  <div class="content">
+    <!-- TODAY -->
+    <div class="screen active" id="screen-today">
+
+      <div class="card">
+        <div class="card-title">How are you feeling?</div>
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Mood</span>
+            <span class="slider-value" id="val-mood">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="slider-mood" oninput="onSlider('mood',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Energy</span>
+            <span class="slider-value" id="val-energy">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="slider-energy" oninput="onSlider('energy',this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Rested</span>
+            <span class="slider-value" id="val-rested">5</span>
+          </div>
+          <input type="range" min="1" max="10" value="5" id="slider-rested" oninput="onSlider('rested',this.value)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sleep last night</div>
+        <div class="sleep-grid" id="sleep-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Side effects</div>
+        <div class="chip-grid" id="fx-chips"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Medications</div>
+        <div class="meds-row" id="meds-row" onclick="toggleMeds()">
+          <div class="meds-check" id="meds-check"></div>
+          <span class="meds-label">Took all medications today</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Notes</div>
+        <textarea id="today-notes" rows="3" placeholder="Anything else to note…" oninput="saveNote(this.value)"></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="saveToday()">Save evening check-in</button>
+
+    </div>
+
+    <!-- HISTORY -->
+    <div class="screen" id="screen-history">
+      <div id="history-content"></div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="screen" id="screen-report">
+      <div class="range-btns" id="range-btns">
+        <button class="range-btn active" onclick="setRange(7,this)">7 days</button>
+        <button class="range-btn" onclick="setRange(14,this)">14 days</button>
+        <button class="range-btn" onclick="setRange(30,this)">30 days</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab active" id="tab-today" onclick="showScreen('today')">
+      <span class="tab-icon">🌙</span>Today
+    </button>
+    <button class="tab" id="tab-history" onclick="showScreen('history')">
+      <span class="tab-icon">📋</span>History
+    </button>
+    <button class="tab" id="tab-report" onclick="showScreen('report')">
+      <span class="tab-icon">📊</span>Report
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────
+const SIDE_EFFECTS = ['Nausea','Headache','Fatigue','Insomnia','Dry mouth','Anxiety','Low mood','Dizziness'];
+const SLEEP_OPTIONS = [3, 4, 5, 6, 7, 8, 9, 10];
+const MOOD_EMOJI = ['','😣','😟','😕','😐','🙂','😊','😀','😄','🤩','🥳'];
+
+// ── PWA manifest ──────────────────────────────────────────────
+const manifest = {
+  name: 'MoodTracker', short_name: 'MoodTracker',
+  start_url: window.location.href,
+  display: 'standalone', background_color: '#0f172a', theme_color: '#0f172a',
+  icons: [{
+    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230f172a'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle'%3E%F0%9F%8C%99%3C/text%3E%3C/svg%3E",
+    sizes: '192x192', type: 'image/svg+xml'
+  }]
+};
+document.getElementById('pwa-manifest').href =
+  URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+
+// iOS install hint
+const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (isIos && !isStandalone) {
+  document.getElementById('install-area').innerHTML =
+    `<div class="install-banner"><p><strong>Add to Home Screen</strong>Tap Share then "Add to Home Screen"</p><button class="inst-close" onclick="this.parentElement.remove()">×</button></div>`;
+}
+
+// ── Storage ───────────────────────────────────────────────────
+const DB = {
+  logs:     () => JSON.parse(localStorage.getItem('mt2_logs') || '{}'),
+  saveLogs: l  => localStorage.setItem('mt2_logs', JSON.stringify(l)),
+  today:    () => new Date().toISOString().split('T')[0],
+  todayLog: function() {
+    const logs = this.logs();
+    return logs[this.today()] || { mood:5, energy:5, rested:5, sleep:7, fx:[], meds:false, note:'' };
+  },
+  saveLog: function(date, entry) {
+    const logs = this.logs();
+    logs[date] = entry;
+    this.saveLogs(logs);
+  }
+};
+
+// ── State ─────────────────────────────────────────────────────
+let reportRange = 7;
+let moodChart, energyChart, restedChart, sleepChart;
+
+// ── Init today view ───────────────────────────────────────────
+function initToday() {
+  const log = DB.todayLog();
+
+  // Sliders
+  ['mood','energy','rested'].forEach(k => {
+    document.getElementById('slider-' + k).value = log[k];
+    document.getElementById('val-' + k).textContent = log[k];
+  });
+
+  // Sleep
+  const sg = document.getElementById('sleep-grid');
+  sg.innerHTML = '';
+  SLEEP_OPTIONS.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = 'sleep-btn' + (log.sleep === h ? ' selected' : '');
+    btn.textContent = h + 'h';
+    btn.onclick = () => setSleep(h);
+    sg.append(btn);
+  });
+  // "Under 4h" option
+  const under = document.createElement('button');
+  under.className = 'sleep-btn' + (log.sleep < 3 ? ' selected' : '');
+  under.textContent = 'Under 3h';
+  under.onclick = () => setSleep(2);
+  sg.append(under);
+
+  // Side effects
+  const fc = document.getElementById('fx-chips');
+  fc.innerHTML = '';
+  SIDE_EFFECTS.forEach(fx => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (log.fx.includes(fx) ? ' selected' : '');
+    chip.textContent = fx;
+    chip.onclick = () => toggleFX(fx, chip);
+    fc.append(chip);
+  });
+
+  // Meds
+  const check = document.getElementById('meds-check');
+  check.textContent = log.meds ? '✓' : '';
+  check.classList.toggle('checked', log.meds);
+
+  // Notes
+  document.getElementById('today-notes').value = log.note || '';
+}
+
+// ── Slider ────────────────────────────────────────────────────
+function onSlider(key, val) {
+  document.getElementById('val-' + key).textContent = val;
+  const log = DB.todayLog();
+  log[key] = parseInt(val);
+  DB.saveLog(DB.today(), log);
+}
+
+// ── Sleep ─────────────────────────────────────────────────────
+function setSleep(h) {
+  const log = DB.todayLog();
+  log.sleep = h;
+  DB.saveLog(DB.today(), log);
+  document.querySelectorAll('.sleep-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === h + 'h' || (h === 2 && b.textContent === 'Under 3h'));
+  });
+}
+
+// ── Side effects ──────────────────────────────────────────────
+function toggleFX(fx, chip) {
+  const log = DB.todayLog();
+  if (log.fx.includes(fx)) {
+    log.fx = log.fx.filter(f => f !== fx);
+    chip.classList.remove('selected');
+  } else {
+    log.fx.push(fx);
+    chip.classList.add('selected');
+  }
+  DB.saveLog(DB.today(), log);
+}
+
+// ── Meds ──────────────────────────────────────────────────────
+function toggleMeds() {
+  const log = DB.todayLog();
+  log.meds = !log.meds;
+  DB.saveLog(DB.today(), log);
+  const check = document.getElementById('meds-check');
+  check.textContent = log.meds ? '✓' : '';
+  check.classList.toggle('checked', log.meds);
+}
+
+// ── Notes ─────────────────────────────────────────────────────
+function saveNote(val) {
+  const log = DB.todayLog();
+  log.note = val;
+  DB.saveLog(DB.today(), log);
+}
+
+// ── Save ──────────────────────────────────────────────────────
+function saveToday() {
+  flash('Check-in saved ✓');
+}
+
+function flash(msg) {
+  const el = document.createElement('div');
+  el.className = 'save-flash';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2100);
+}
+
+// ── History ───────────────────────────────────────────────────
+function renderHistory() {
+  const logs  = DB.logs();
+  const el    = document.getElementById('history-content');
+  const dates = Object.keys(logs).sort((a, b) => b.localeCompare(a));
+
+  if (!dates.length) {
+    el.innerHTML = `<div class="empty"><span class="empty-icon">📋</span>No entries yet<br><span style="font-size:13px">Complete tonight's check-in to start your history</span></div>`;
+    return;
+  }
+
+  el.innerHTML = dates.map(date => {
+    const log = logs[date];
+    const d   = new Date(date + 'T12:00:00');
+    const label = d.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric', year:'numeric' });
+
+    const scores = [
+      log.mood   !== undefined ? `Mood ${log.mood}/10`   : null,
+      log.energy !== undefined ? `Energy ${log.energy}/10` : null,
+      log.rested !== undefined ? `Rested ${log.rested}/10` : null,
+    ].filter(Boolean);
+
+    const details = [
+      log.sleep ? `Sleep: ${log.sleep < 3 ? 'Under 3h' : log.sleep + 'h'}` : null,
+      log.meds  ? 'Medications: ✓' : null,
+      log.fx && log.fx.length ? `Side effects: ${log.fx.join(', ')}` : null,
+      log.note  ? `"${log.note}"` : null,
+    ].filter(Boolean);
+
+    return `<div class="log-entry">
+      <div class="log-date">${label}</div>
+      <div class="log-scores">${scores.map(s => `<span class="log-score-chip">${s}</span>`).join('')}</div>
+      ${details.length ? `<div class="log-detail">${details.join(' · ')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Report ────────────────────────────────────────────────────
+function setRange(days, btn) {
+  reportRange = days;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReport();
+}
+
+function renderReport() {
+  const logs = DB.logs();
+  const el   = document.getElementById('report-content');
+
+  const dates = [];
+  for (let i = reportRange - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+
+  if (!Object.keys(logs).length) {
+    el.innerHTML = `<div class="empty"><span class="empty-icon">📊</span>Not enough data yet<br><span style="font-size:13px">Complete a few check-ins to see your graphs</span></div>`;
+    return;
+  }
+
+  const shortDates = dates.map(d => { const p = d.split('-'); return p[2] + '/' + p[1]; });
+  const moodSeries   = dates.map(d => logs[d]?.mood   ?? null);
+  const energySeries = dates.map(d => logs[d]?.energy ?? null);
+  const restedSeries = dates.map(d => logs[d]?.rested ?? null);
+  const sleepSeries  = dates.map(d => logs[d]?.sleep  ?? null);
+
+  el.innerHTML = `
+    <div class="card"><div class="card-title">Mood</div><div class="chart-wrap"><canvas id="chart-mood"></canvas></div></div>
+    <div class="card"><div class="card-title">Energy</div><div class="chart-wrap"><canvas id="chart-energy"></canvas></div></div>
+    <div class="card"><div class="card-title">Rested</div><div class="chart-wrap"><canvas id="chart-rested"></canvas></div></div>
+    <div class="card"><div class="card-title">Sleep (hours)</div><div class="chart-wrap"><canvas id="chart-sleep"></canvas></div></div>
+  `;
+
+  [moodChart, energyChart, restedChart, sleepChart].forEach(c => { if (c) c.destroy(); });
+
+  const lineOpts = (color) => ({
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { font: { size: 9 }, maxTicksLimit: 7 }, grid: { display: false } },
+      y: { min: 0, max: 10, ticks: { font: { size: 10 }, stepSize: 2 }, grid: { color: 'rgba(0,0,0,.05)' } }
+    }
+  });
+
+  const lineDataset = (data, color) => ({
+    data, borderColor: color, backgroundColor: color + '22',
+    borderWidth: 2, pointRadius: 3, fill: true, tension: 0.3, spanGaps: true
+  });
+
+  moodChart   = new Chart(document.getElementById('chart-mood').getContext('2d'),   { type:'line', data:{ labels:shortDates, datasets:[lineDataset(moodSeries,   '#6366f1')] }, options: lineOpts('#6366f1') });
+  energyChart = new Chart(document.getElementById('chart-energy').getContext('2d'), { type:'line', data:{ labels:shortDates, datasets:[lineDataset(energySeries, '#f97316')] }, options: lineOpts('#f97316') });
+  restedChart = new Chart(document.getElementById('chart-rested').getContext('2d'), { type:'line', data:{ labels:shortDates, datasets:[lineDataset(restedSeries, '#0891b2')] }, options: lineOpts('#0891b2') });
+  sleepChart  = new Chart(document.getElementById('chart-sleep').getContext('2d'),  {
+    type: 'bar',
+    data: { labels: shortDates, datasets: [{ data: sleepSeries, backgroundColor: '#6366f122', borderColor: '#6366f1', borderWidth: 1.5, borderRadius: 3, spanGaps: true }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxTicksLimit: 7 }, grid: { display: false } },
+        y: { min: 0, max: 12, ticks: { font: { size: 10 }, stepSize: 2 }, grid: { color: 'rgba(0,0,0,.05)' } }
+      }
+    }
+  });
+}
+
+// ── Nav ───────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('tab-'    + name).classList.add('active');
+  if (name === 'today')   initToday();
+  if (name === 'history') renderHistory();
+  if (name === 'report')  renderReport();
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+document.getElementById('header-date').textContent =
+  new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+initToday();
+</script>
+</body>
+</html>
